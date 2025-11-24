@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: emotionvisualizer-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-emotionviz}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-emotionviz_db}
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-emotionviz}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - emotionviz-network
+    restart: unless-stopped
+
+  # FastAPI Backend
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: emotionvisualizer-api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-emotionviz}:${POSTGRES_PASSWORD:-devpassword}@db:5432/${POSTGRES_DB:-emotionviz_db}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      NANOBANANA_API_KEY: ${NANOBANANA_API_KEY}
+      DEBUG: "true"
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-key-change-in-production}
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 60
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:*,capacitor://localhost}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/tests:/app/tests
+      - ./backend/alembic:/app/alembic
+      - ./data/logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - emotionviz-network
+    restart: unless-stopped
+
+  # Adminer - Database Management UI (Optional)
+  adminer:
+    image: adminer:latest
+    container_name: emotionvisualizer-adminer
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+      ADMINER_DESIGN: nette
+    depends_on:
+      - db
+    networks:
+      - emotionviz-network
+    restart: unless-stopped
+    profiles:
+      - tools
+
+networks:
+  emotionviz-network:
+    driver: bridge
+    name: emotionviz-network
