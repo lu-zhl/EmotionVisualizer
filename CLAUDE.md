@@ -38,7 +38,7 @@ EmotionVisualizer/
     │   └── manual/                 # User manuals (for end-users and maintainers)
 ```
 
-**Note**: Milestone names are unique and start with sequence numbers (e.g., `001-initialization`)
+**Note**: Milestone names follow the pattern `<req-number>-<milestone-name>` where the req number comes from the organic requirement document (e.g., req002.md → `002-backend`)
 
 ### Development Roles
 
