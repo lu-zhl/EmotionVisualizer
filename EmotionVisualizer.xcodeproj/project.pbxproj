@@ -35,6 +35,11 @@
 		B1000000100000000000000E /* PrimaryActionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000000100000000000000E /* PrimaryActionButton.swift */; };
 		B1000000100000000000000F /* DrawMyFeelingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000000100000000000000F /* DrawMyFeelingsView.swift */; };
 		B10000001000000000000010 /* SelectionSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000001000000000000010 /* SelectionSummaryView.swift */; };
+		C10000001000000000000001 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000001000000000000001 /* APIService.swift */; };
+		D10000001000000000000001 /* FeelingResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D20000001000000000000001 /* FeelingResultView.swift */; };
+		D10000001000000000000002 /* FreeTextInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D20000001000000000000002 /* FreeTextInputView.swift */; };
+		D10000001000000000000003 /* StoryResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D20000001000000000000003 /* StoryResultView.swift */; };
+		D10000001000000000000004 /* FireworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D20000001000000000000004 /* FireworkView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -67,6 +72,11 @@
 		B2000000100000000000000E /* PrimaryActionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryActionButton.swift; sourceTree = "<group>"; };
 		B2000000100000000000000F /* DrawMyFeelingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawMyFeelingsView.swift; sourceTree = "<group>"; };
 		B20000001000000000000010 /* SelectionSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionSummaryView.swift; sourceTree = "<group>"; };
+		C20000001000000000000001 /* APIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIService.swift; sourceTree = "<group>"; };
+		D20000001000000000000001 /* FeelingResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeelingResultView.swift; sourceTree = "<group>"; };
+		D20000001000000000000002 /* FreeTextInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FreeTextInputView.swift; sourceTree = "<group>"; };
+		D20000001000000000000003 /* StoryResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryResultView.swift; sourceTree = "<group>"; };
+		D20000001000000000000004 /* FireworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireworkView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,9 +105,18 @@
 				A50000001000000000000005 /* Models */,
 				A50000001000000000000006 /* Views */,
 				A50000001000000000000007 /* ViewModels */,
+				C50000001000000000000001 /* Services */,
 				A50000001000000000000008 /* Resources */,
 			);
 			path = EmotionVisualizer;
+			sourceTree = "<group>";
+		};
+		C50000001000000000000001 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				C20000001000000000000001 /* APIService.swift */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 		A50000001000000000000003 /* Products */ = {
@@ -207,6 +226,10 @@
 				B2000000100000000000000C /* VisualizationResultView.swift */,
 				B2000000100000000000000D /* ErrorView.swift */,
 				B2000000100000000000000E /* PrimaryActionButton.swift */,
+				D20000001000000000000001 /* FeelingResultView.swift */,
+				D20000001000000000000002 /* FreeTextInputView.swift */,
+				D20000001000000000000003 /* StoryResultView.swift */,
+				D20000001000000000000004 /* FireworkView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -307,6 +330,11 @@
 				B1000000100000000000000E /* PrimaryActionButton.swift in Sources */,
 				B1000000100000000000000F /* DrawMyFeelingsView.swift in Sources */,
 				B10000001000000000000010 /* SelectionSummaryView.swift in Sources */,
+				C10000001000000000000001 /* APIService.swift in Sources */,
+				D10000001000000000000001 /* FeelingResultView.swift in Sources */,
+				D10000001000000000000002 /* FreeTextInputView.swift in Sources */,
+				D10000001000000000000003 /* StoryResultView.swift in Sources */,
+				D10000001000000000000004 /* FireworkView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

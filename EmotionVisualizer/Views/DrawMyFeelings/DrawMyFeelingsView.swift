@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DrawMyFeelingsView: View {
     @StateObject private var viewModel = DrawMyFeelingsViewModel()
+    @State private var showFireworks = false
 
     var body: some View {
         ZStack {
@@ -13,10 +14,27 @@ struct DrawMyFeelingsView: View {
             contentView
                 .animation(.dmfEmphasis, value: viewModel.state)
 
-            // Generating overlay
-            if viewModel.state == .generating {
-                GeneratingView(onCancel: viewModel.cancelGeneration)
-                    .transition(.opacity)
+            // Generating overlays
+            if viewModel.state == .generatingFeeling {
+                GeneratingView(
+                    message: "Drawing your feelings...",
+                    onCancel: viewModel.cancelGeneration
+                )
+                .transition(.opacity)
+            }
+
+            if viewModel.state == .generatingStory {
+                GeneratingView(
+                    message: "Understanding your story...",
+                    onCancel: viewModel.cancelGeneration
+                )
+                .transition(.opacity)
+            }
+
+            // Firework overlay
+            if showFireworks {
+                FireworkView(colors: viewModel.currentVisualizationColors)
+                    .allowsHitTesting(false)
             }
 
             // Error overlay
@@ -39,22 +57,24 @@ struct DrawMyFeelingsView: View {
         case .initial:
             initialView
 
-        case .inputMode:
-            inputModeView
+        case .questionnaireLevel1:
+            level1QuestionnaireView
 
-        case .questionnaire(let level):
-            if level == 1 {
-                level1QuestionnaireView
-            } else {
-                level2QuestionnaireView
-            }
+        case .questionnaireLevel2:
+            level2QuestionnaireView
 
-        case .generating:
+        case .generatingFeeling, .generatingStory:
             // Handled by overlay
             Color.clear
 
-        case .result:
-            resultView
+        case .feelingResult:
+            feelingResultView
+
+        case .freeTextInput:
+            freeTextInputView
+
+        case .storyResult:
+            storyResultView
         }
     }
 
@@ -64,63 +84,11 @@ struct DrawMyFeelingsView: View {
         VStack {
             Spacer()
 
-            InitialCloudView(onTap: viewModel.enterInputMode)
+            InitialCloudView(onTap: viewModel.tapCloud0)
                 .transition(.scale.combined(with: .opacity))
 
             Spacer()
         }
-    }
-
-    // MARK: - Input Mode View
-
-    private var inputModeView: some View {
-        VStack(spacing: 0) {
-            // Navigation bar with Start Over
-            HStack {
-                Button(action: viewModel.startOver) {
-                    HStack(spacing: DMFSpacing.xxs) {
-                        Image(systemName: "arrow.counterclockwise")
-                            .font(.system(size: 16))
-                        Text("Start over")
-                            .font(.dmfButtonSmall)
-                    }
-                    .foregroundColor(.textSecondary)
-                }
-
-                Spacer()
-            }
-            .padding(.horizontal, DMFSpacing.lg)
-            .padding(.top, DMFSpacing.md)
-
-            Spacer()
-
-            // Cloud carousel
-            CloudCarousel(
-                freeText: $viewModel.input.freeText,
-                currentIndex: $viewModel.currentCloudIndex,
-                maxCharacters: viewModel.maxCharacterCount,
-                warningThreshold: viewModel.warningCharacterThreshold,
-                hasFreeTextContent: viewModel.hasFreeText,
-                hasQuestionnaireSelections: viewModel.hasQuestionnaireSelections,
-                selectedEmotions: viewModel.input.selectedEmotionsList,
-                onStartQuestionnaire: viewModel.startQuestionnaire,
-                onModifySelections: viewModel.modifySelections
-            )
-
-            Spacer()
-
-            // Draw my feelings button
-            PrimaryActionButton(
-                title: "Draw my feelings",
-                isEnabled: viewModel.canGenerateVisualization,
-                action: {
-                    Task { await viewModel.generateVisualization() }
-                }
-            )
-            .padding(.horizontal, DMFSpacing.lg)
-            .padding(.bottom, DMFSpacing.lg)
-        }
-        .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 
     // MARK: - Questionnaire Views
@@ -128,7 +96,7 @@ struct DrawMyFeelingsView: View {
     private var level1QuestionnaireView: some View {
         Level1QuestionnaireView(
             onSelectCategory: viewModel.selectCategory,
-            onBack: viewModel.goBackInQuestionnaire,
+            onBack: viewModel.goBack,
             onStartOver: viewModel.startOver
         )
         .transition(.asymmetric(
@@ -140,10 +108,12 @@ struct DrawMyFeelingsView: View {
     private var level2QuestionnaireView: some View {
         Level2EmotionsView(
             emotions: viewModel.availableEmotions,
-            selectedEmotions: viewModel.input.selectedEmotions,
+            selectedEmotions: viewModel.journeyData.selectedEmotions,
             onToggleEmotion: viewModel.toggleEmotion,
-            onDone: viewModel.finishQuestionnaire,
-            onBack: viewModel.goBackInQuestionnaire,
+            onDone: {
+                Task { await viewModel.generateFeelingVisualization() }
+            },
+            onBack: viewModel.goBack,
             onStartOver: viewModel.startOver
         )
         .transition(.asymmetric(
@@ -152,14 +122,60 @@ struct DrawMyFeelingsView: View {
         ))
     }
 
-    // MARK: - Result View
+    // MARK: - Feeling Result View
 
-    private var resultView: some View {
-        VisualizationResultView(
-            visualization: viewModel.generatedVisualization,
+    private var feelingResultView: some View {
+        FeelingResultView(
+            visualization: viewModel.feelingVisualization,
+            summaryText: viewModel.journeyData.summaryText,
+            onCelebrate: triggerFirework,
+            onKnowMore: viewModel.goToFreeTextInput,
             onStartOver: viewModel.startOver
         )
         .transition(.opacity.combined(with: .scale(scale: 0.95)))
+    }
+
+    // MARK: - Free Text Input View
+
+    private var freeTextInputView: some View {
+        FreeTextInputView(
+            text: $viewModel.journeyData.storyText,
+            characterCount: viewModel.journeyData.storyCharacterCount,
+            minCharacters: UserJourneyData.minStoryLength,
+            maxCharacters: UserJourneyData.maxStoryLength,
+            canSubmit: viewModel.journeyData.canDrawStory,
+            onDrawStory: {
+                Task { await viewModel.generateStoryVisualization() }
+            },
+            onStartOver: viewModel.startOver
+        )
+        .transition(.asymmetric(
+            insertion: .move(edge: .trailing).combined(with: .opacity),
+            removal: .move(edge: .leading).combined(with: .opacity)
+        ))
+    }
+
+    // MARK: - Story Result View
+
+    private var storyResultView: some View {
+        StoryResultView(
+            visualization: viewModel.storyVisualization,
+            onCelebrate: triggerFirework,
+            onStartOver: viewModel.startOver
+        )
+        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+    }
+
+    // MARK: - Firework Animation
+
+    private func triggerFirework() {
+        viewModel.celebrateFeelings()
+        showFireworks = true
+
+        // Reset after animation
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            showFireworks = false
+        }
     }
 }
 

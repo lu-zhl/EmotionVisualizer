@@ -84,6 +84,7 @@ extension Font {
     static let dmfTitle = Font.system(size: 24, weight: .semibold)
     static let dmfHeadline = Font.system(size: 20, weight: .semibold)
     static let dmfBody = Font.system(size: 17, weight: .regular)
+    static let dmfButton = Font.system(size: 17, weight: .semibold)
     static let dmfButtonLarge = Font.system(size: 18, weight: .semibold)
     static let dmfButtonSmall = Font.system(size: 16, weight: .medium)
     static let dmfCaption = Font.system(size: 14, weight: .regular)

@@ -1,7 +1,8 @@
 import SwiftUI
 
-struct VisualizationResultView: View {
+struct StoryResultView: View {
     let visualization: GeneratedVisualization?
+    let onCelebrate: () -> Void
     let onStartOver: () -> Void
 
     @State private var isImageVisible = false
@@ -10,7 +11,7 @@ struct VisualizationResultView: View {
         VStack(spacing: DMFSpacing.xl) {
             Spacer()
 
-            // Generated visualization image
+            // Generated story visualization image
             ZStack {
                 RoundedRectangle(cornerRadius: DMFRadius.xlarge)
                     .fill(
@@ -26,7 +27,6 @@ struct VisualizationResultView: View {
                     )
                     .frame(width: 300, height: 300)
 
-                // Show actual generated image if available
                 if let imageData = visualization?.imageData,
                    let uiImage = UIImage(data: imageData) {
                     Image(uiImage: uiImage)
@@ -35,13 +35,12 @@ struct VisualizationResultView: View {
                         .frame(width: 300, height: 300)
                         .clipShape(RoundedRectangle(cornerRadius: DMFRadius.xlarge))
                 } else {
-                    // Fallback placeholder
                     VStack(spacing: DMFSpacing.md) {
-                        Image(systemName: "sparkles")
+                        Image(systemName: "book.fill")
                             .font(.system(size: 60))
                             .foregroundColor(.skyBlue)
 
-                        Text("Your visualization")
+                        Text("Your story")
                             .font(.dmfHeadline)
                             .foregroundColor(.textPrimary)
                     }
@@ -50,47 +49,51 @@ struct VisualizationResultView: View {
             .shadowMedium()
             .scaleEffect(isImageVisible ? 1.0 : 0.95)
             .opacity(isImageVisible ? 1 : 0)
-            .onAppear {
-                withAnimation(.dmfGentle.delay(0.1)) {
-                    isImageVisible = true
-                }
-            }
 
             Spacer()
 
-            // Start over button
-            Button(action: onStartOver) {
-                Text("Start over")
-                    .font(.dmfButtonSmall)
-                    .foregroundColor(.textPrimary)
-                    .frame(width: 140, height: 44)
-                    .background(
-                        RoundedRectangle(cornerRadius: DMFRadius.medium)
-                            .fill(Color.aliceBlue)
+            // Celebrate button (centered)
+            Button(action: onCelebrate) {
+                HStack(spacing: DMFSpacing.xs) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 16))
+                    Text("Let it out!")
+                        .font(.dmfButton)
+                }
+                .foregroundColor(.white)
+                .frame(height: 48)
+                .padding(.horizontal, DMFSpacing.xl)
+                .background(
+                    LinearGradient(
+                        colors: [Color(hex: "FFD700"), Color(hex: "FFA500")],
+                        startPoint: .leading,
+                        endPoint: .trailing
                     )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: DMFRadius.medium)
-                            .stroke(Color.lightBlue, lineWidth: 1)
-                    )
+                )
+                .clipShape(Capsule())
             }
             .shadowSoft()
             .opacity(isImageVisible ? 1 : 0)
-            .animation(.dmfStandard.delay(0.5), value: isImageVisible)
+            .animation(.dmfStandard.delay(0.3), value: isImageVisible)
+
+            // Start over button
+            Button(action: onStartOver) {
+                HStack(spacing: DMFSpacing.xxs) {
+                    Image(systemName: "arrow.counterclockwise")
+                        .font(.system(size: 16))
+                    Text("Start over")
+                        .font(.dmfButtonSmall)
+                }
+                .foregroundColor(.textSecondary)
+            }
+            .opacity(isImageVisible ? 1 : 0)
+            .animation(.dmfStandard.delay(0.4), value: isImageVisible)
             .padding(.bottom, DMFSpacing.xxl)
         }
-    }
-}
-
-#Preview {
-    ZStack {
-        LinearGradient.screenBackground
-            .ignoresSafeArea()
-
-        VisualizationResultView(
-            visualization: GeneratedVisualization(
-                prompt: "User feels super happy and chill"
-            ),
-            onStartOver: { print("Start over") }
-        )
+        .onAppear {
+            withAnimation(.dmfGentle.delay(0.1)) {
+                isImageVisible = true
+            }
+        }
     }
 }

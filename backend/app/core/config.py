@@ -15,6 +15,12 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str
     NANOBANANA_API_KEY: str = ""
 
+    # Visualization Settings
+    GEMINI_MODEL: str = "gemini-2.0-flash"
+    GEMINI_TIMEOUT_SECONDS: int = 30
+    GEMINI_MAX_RETRIES: int = 2
+    VISUALIZATION_IMAGE_SIZE: int = 512
+
     # Security
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"

@@ -6,108 +6,77 @@ import UIKit
 class DrawMyFeelingsViewModel: ObservableObject {
     // MARK: - Published Properties
     @Published var state: DrawMyFeelingsState = .initial
-    @Published var input: EmotionInput = EmotionInput()
-    @Published var currentCloudIndex: Int = 0  // 0 = Cloud #1, 1 = Cloud #2
-    @Published var generatedVisualization: GeneratedVisualization?
+    @Published var journeyData: UserJourneyData = UserJourneyData()
+    @Published var feelingVisualization: GeneratedVisualization?
+    @Published var storyVisualization: GeneratedVisualization?
     @Published var errorMessage: String?
     @Published var showError: Bool = false
 
-    // MARK: - Constants
-    let maxCharacterCount = 5000
-    let warningCharacterThreshold = 4500
-
     // MARK: - Computed Properties
-    var canGenerateVisualization: Bool {
-        input.hasValidInput
-    }
-
-    var characterCount: Int {
-        input.freeText.count
-    }
-
-    var isNearCharacterLimit: Bool {
-        characterCount > warningCharacterThreshold
-    }
-
-    var hasQuestionnaireSelections: Bool {
-        !input.selectedEmotions.isEmpty
-    }
-
-    var hasFreeText: Bool {
-        !input.freeText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-
     var availableEmotions: [DMFEmotion] {
-        guard let category = input.feelingCategory else { return [] }
+        guard let category = journeyData.feelingCategory else { return [] }
         return DMFEmotion.emotions(for: category)
+    }
+
+    var hasSelectedEmotions: Bool {
+        !journeyData.selectedEmotions.isEmpty
+    }
+
+    var currentVisualizationColors: [Color] {
+        switch state {
+        case .feelingResult:
+            return feelingVisualization?.dominantColors ?? []
+        case .storyResult:
+            return storyVisualization?.dominantColors ?? []
+        default:
+            return []
+        }
     }
 
     // MARK: - State Transitions
 
-    func enterInputMode() {
+    func tapCloud0() {
         withAnimation(.dmfEmphasis) {
-            state = .inputMode
-        }
-        triggerHaptic(.light)
-    }
-
-    func startQuestionnaire() {
-        withAnimation(.dmfStandard) {
-            state = .questionnaire(level: 1)
+            state = .questionnaireLevel1
         }
         triggerHaptic(.light)
     }
 
     func selectCategory(_ category: FeelingCategory) {
-        input.feelingCategory = category
+        journeyData.feelingCategory = category
         withAnimation(.dmfStandard) {
-            state = .questionnaire(level: 2)
+            state = .questionnaireLevel2
         }
         triggerHaptic(.light)
     }
 
     func toggleEmotion(_ emotion: DMFEmotion) {
-        if input.selectedEmotions.contains(emotion.id) {
-            input.selectedEmotions.remove(emotion.id)
+        if journeyData.selectedEmotions.contains(emotion.id) {
+            journeyData.selectedEmotions.remove(emotion.id)
         } else {
-            input.selectedEmotions.insert(emotion.id)
+            journeyData.selectedEmotions.insert(emotion.id)
         }
         triggerHaptic(.light)
     }
 
     func isEmotionSelected(_ emotion: DMFEmotion) -> Bool {
-        input.selectedEmotions.contains(emotion.id)
+        journeyData.selectedEmotions.contains(emotion.id)
     }
 
-    func finishQuestionnaire() {
-        // Go back to input mode with summary displayed on Cloud #2
-        withAnimation(.dmfStandard) {
-            state = .inputMode
-            currentCloudIndex = 1  // Show questionnaire cloud with summary
-        }
-        triggerHaptic(.success)
-    }
-
-    func modifySelections() {
-        // Re-enter questionnaire at Level 2 to modify selections
-        withAnimation(.dmfStandard) {
-            state = .questionnaire(level: 2)
-        }
-        triggerHaptic(.light)
-    }
-
-    func goBackInQuestionnaire() {
+    func goBack() {
         switch state {
-        case .questionnaire(level: 2):
-            // Go back to level 1, clear level 2 selections
-            input.selectedEmotions = []
+        case .questionnaireLevel2:
+            journeyData.selectedEmotions = []
             withAnimation(.dmfStandard) {
-                state = .questionnaire(level: 1)
+                state = .questionnaireLevel1
             }
-        case .questionnaire(level: 1):
-            // Exit questionnaire back to input mode
+        case .questionnaireLevel1:
             withAnimation(.dmfStandard) {
-                state = .inputMode
+                state = .initial
+            }
+        case .freeTextInput:
+            withAnimation(.dmfStandard) {
+                state = .feelingResult
             }
         default:
             break
@@ -117,91 +86,152 @@ class DrawMyFeelingsViewModel: ObservableObject {
 
     func startOver() {
         withAnimation(.dmfEmphasis) {
-            input.reset()
-            generatedVisualization = nil
+            journeyData.reset()
+            feelingVisualization = nil
+            storyVisualization = nil
             errorMessage = nil
-            currentCloudIndex = 0
             state = .initial
         }
         triggerHaptic(.light)
     }
 
-    func swipeToCloud(at index: Int) {
-        withAnimation(.dmfSpringy) {
-            currentCloudIndex = max(0, min(1, index))
-        }
-    }
+    // MARK: - Feeling Visualization
 
-    // MARK: - Visualization Generation
-
-    func generateVisualization() async {
-        guard canGenerateVisualization else { return }
+    func generateFeelingVisualization() async {
+        guard journeyData.hasValidEmotions,
+              let category = journeyData.feelingCategory else { return }
 
         withAnimation(.dmfStandard) {
-            state = .generating
+            state = .generatingFeeling
         }
         triggerHaptic(.light)
 
-        // Build prompt from inputs
-        let prompt = buildPrompt()
-
         do {
-            // Simulate API call (in future, this will call actual backend)
-            try await Task.sleep(nanoseconds: 2_500_000_000) // 2.5 seconds
+            let response = try await APIService.shared.generateFeelingVisualization(
+                feelingCategory: category.backendValue,
+                selectedEmotions: journeyData.backendEmotions
+            )
 
-            // Create mock visualization result
+            guard let imageData = Data(base64Encoded: response.imageData) else {
+                throw NSError(domain: "DrawMyFeelings", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to decode image"])
+            }
+
+            let colors = response.dominantColors.compactMap { $0.toColor() }
+
             let visualization = GeneratedVisualization(
-                imageURL: "placeholder_visualization",
-                prompt: prompt
+                imageData: imageData,
+                prompt: response.promptUsed,
+                dominantColors: colors
             )
 
             withAnimation(.dmfGentle) {
-                generatedVisualization = visualization
-                state = .result
+                feelingVisualization = visualization
+                state = .feelingResult
             }
             triggerHaptic(.success)
         } catch {
+            print("Feeling visualization error: \(error)")
             withAnimation(.dmfStandard) {
-                errorMessage = "Oops! We couldn't create your visualization."
+                errorMessage = "Oops! We couldn't draw your feelings. Please try again."
                 showError = true
-                state = .inputMode
+                state = .questionnaireLevel2
             }
             triggerHaptic(.error)
         }
     }
 
-    func cancelGeneration() {
+    // MARK: - Story Visualization
+
+    func goToFreeTextInput() {
         withAnimation(.dmfStandard) {
-            state = .inputMode
+            state = .freeTextInput
+        }
+        triggerHaptic(.light)
+    }
+
+    func generateStoryVisualization() async {
+        guard journeyData.canDrawStory,
+              let category = journeyData.feelingCategory else { return }
+
+        withAnimation(.dmfStandard) {
+            state = .generatingStory
+        }
+        triggerHaptic(.light)
+
+        do {
+            let response = try await APIService.shared.generateStoryVisualization(
+                storyText: journeyData.storyText,
+                feelingCategory: category.backendValue,
+                selectedEmotions: journeyData.backendEmotions
+            )
+
+            guard let imageData = Data(base64Encoded: response.imageData) else {
+                throw NSError(domain: "DrawMyFeelings", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to decode image"])
+            }
+
+            let colors = response.dominantColors.compactMap { $0.toColor() }
+
+            // Convert story analysis from API response
+            let storyAnalysis = GeneratedStoryAnalysis(from: response.storyAnalysis)
+
+            let visualization = GeneratedVisualization(
+                imageData: imageData,
+                prompt: response.promptUsed,
+                dominantColors: colors,
+                storyAnalysis: storyAnalysis
+            )
+
+            withAnimation(.dmfGentle) {
+                storyVisualization = visualization
+                state = .storyResult
+            }
+            triggerHaptic(.success)
+        } catch {
+            print("Story visualization error: \(error)")
+            withAnimation(.dmfStandard) {
+                errorMessage = "Oops! We couldn't understand your story. Please try again."
+                showError = true
+                state = .freeTextInput
+            }
+            triggerHaptic(.error)
         }
     }
 
+    // MARK: - Celebrate Animation
+    func celebrateFeelings() {
+        triggerHaptic(.medium)
+        // The actual firework animation is handled by the view
+    }
+
+    // MARK: - Cancel Generation
+    func cancelGeneration() {
+        withAnimation(.dmfStandard) {
+            switch state {
+            case .generatingFeeling:
+                state = .questionnaireLevel2
+            case .generatingStory:
+                state = .freeTextInput
+            default:
+                break
+            }
+        }
+    }
+
+    // MARK: - Retry
     func retryGeneration() async {
         showError = false
         errorMessage = nil
-        await generateVisualization()
+        switch state {
+        case .questionnaireLevel2:
+            await generateFeelingVisualization()
+        case .freeTextInput:
+            await generateStoryVisualization()
+        default:
+            break
+        }
     }
 
     // MARK: - Private Helpers
-
-    private func buildPrompt() -> String {
-        var promptParts: [String] = []
-
-        if hasFreeText {
-            promptParts.append("User describes feeling: \"\(input.freeText)\"")
-        }
-
-        if let category = input.feelingCategory {
-            promptParts.append("General mood: \(category.displayName)")
-        }
-
-        if !input.selectedEmotions.isEmpty {
-            let emotionNames = input.selectedEmotionsList.map { $0.displayName }.joined(separator: ", ")
-            promptParts.append("Specific emotions: \(emotionNames)")
-        }
-
-        return promptParts.joined(separator: ". ")
-    }
 
     private func triggerHaptic(_ type: UINotificationFeedbackGenerator.FeedbackType) {
         let generator = UINotificationFeedbackGenerator()
@@ -211,5 +241,27 @@ class DrawMyFeelingsViewModel: ObservableObject {
     private func triggerHaptic(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
         let generator = UIImpactFeedbackGenerator(style: style)
         generator.impactOccurred()
+    }
+}
+
+// MARK: - Legacy compatibility
+extension DrawMyFeelingsViewModel {
+    var input: EmotionInput {
+        get {
+            var emotionInput = EmotionInput()
+            emotionInput.feelingCategory = journeyData.feelingCategory
+            emotionInput.selectedEmotions = journeyData.selectedEmotions
+            emotionInput.freeText = journeyData.storyText
+            return emotionInput
+        }
+        set {
+            journeyData.feelingCategory = newValue.feelingCategory
+            journeyData.selectedEmotions = newValue.selectedEmotions
+            journeyData.storyText = newValue.freeText
+        }
+    }
+
+    var generatedVisualization: GeneratedVisualization? {
+        feelingVisualization ?? storyVisualization
     }
 }

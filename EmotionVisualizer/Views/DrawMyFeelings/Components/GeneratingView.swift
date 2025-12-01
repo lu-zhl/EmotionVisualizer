@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct GeneratingView: View {
+    var message: String = "Creating your visualization"
     let onCancel: () -> Void
 
     @State private var cloudOffset: CGFloat = 0
@@ -34,7 +35,7 @@ struct GeneratingView: View {
 
                 // Loading text with animated dots
                 HStack(spacing: 0) {
-                    Text("Creating your visualization")
+                    Text(message)
                         .font(.dmfHeadline)
                         .foregroundColor(.textPrimary)
 

@@ -1,13 +1,16 @@
 import Foundation
 import SwiftUI
 
-// MARK: - App State
+// MARK: - App State (Version 2.0)
 enum DrawMyFeelingsState: Equatable {
     case initial                    // Showing Cloud #0
-    case inputMode                  // Showing Cloud #1 and Cloud #2 (Cloud #2 shows summary if selections exist)
-    case questionnaire(level: Int)  // In questionnaire flow (level 1 or 2)
-    case generating                 // Creating visualization
-    case result                     // Showing generated image
+    case questionnaireLevel1        // Choosing Good/Bad/Not Sure
+    case questionnaireLevel2        // Selecting specific emotions
+    case generatingFeeling          // Creating feeling visualization
+    case feelingResult              // Showing feeling visualization
+    case freeTextInput              // Entering story text
+    case generatingStory            // Creating story visualization
+    case storyResult                // Showing story visualization
 }
 
 // MARK: - Feeling Category
@@ -41,6 +44,14 @@ enum FeelingCategory: String, CaseIterable, Codable, Identifiable {
         case .notSure: return "Not Sure. Uncertain feelings. Button."
         }
     }
+
+    var backendValue: String {
+        switch self {
+        case .good: return "good"
+        case .bad: return "bad"
+        case .notSure: return "not_sure"
+        }
+    }
 }
 
 // MARK: - Emotion
@@ -53,6 +64,17 @@ struct DMFEmotion: Identifiable, Equatable, Codable, Hashable {
 
     var accentColor: Color {
         Color(hex: accentColorHex)
+    }
+
+    var backendId: String {
+        // Convert camelCase to snake_case for backend
+        switch id {
+        case "superHappy": return "super_happy"
+        case "freakedOut": return "freaked_out"
+        case "madAsHell": return "mad_as_hell"
+        case "boredStiff": return "bored_stiff"
+        default: return id.lowercased()
+        }
     }
 
     static let allEmotions: [DMFEmotion] = [
@@ -95,7 +117,130 @@ struct DMFEmotion: Identifiable, Equatable, Codable, Hashable {
     }
 }
 
-// MARK: - Combined Input
+// MARK: - User Journey Data (Version 2.0)
+struct UserJourneyData: Equatable {
+    // Questionnaire data
+    var feelingCategory: FeelingCategory?
+    var selectedEmotions: Set<String> = []
+
+    // Story text
+    var storyText: String = ""
+
+    // Constants
+    static let minStoryLength = 50
+    static let maxStoryLength = 5000
+    static let warningThreshold = 4500
+
+    // Computed properties
+    var hasValidEmotions: Bool {
+        !selectedEmotions.isEmpty && feelingCategory != nil
+    }
+
+    var selectedEmotionsList: [DMFEmotion] {
+        DMFEmotion.allEmotions.filter { selectedEmotions.contains($0.id) }
+    }
+
+    var backendEmotions: [String] {
+        selectedEmotionsList.map { $0.backendId }
+    }
+
+    var summaryText: String {
+        guard !selectedEmotions.isEmpty else { return "" }
+        let emotionNames = selectedEmotionsList.map { $0.displayName.lowercased() }
+        if emotionNames.count == 1 {
+            return "I feel \(emotionNames[0])."
+        } else if emotionNames.count == 2 {
+            return "I feel \(emotionNames[0]) and \(emotionNames[1])."
+        } else {
+            let allButLast = emotionNames.dropLast().joined(separator: ", ")
+            return "I feel \(allButLast) and \(emotionNames.last!)."
+        }
+    }
+
+    var storyCharacterCount: Int {
+        storyText.trimmingCharacters(in: .whitespacesAndNewlines).count
+    }
+
+    var canDrawStory: Bool {
+        storyCharacterCount >= Self.minStoryLength
+    }
+
+    var isNearCharacterLimit: Bool {
+        storyCharacterCount > Self.warningThreshold
+    }
+
+    var charactersNeeded: Int {
+        max(0, Self.minStoryLength - storyCharacterCount)
+    }
+
+    mutating func reset() {
+        feelingCategory = nil
+        selectedEmotions = []
+        storyText = ""
+    }
+}
+
+// MARK: - Generated Visualization Result (Version 2.1)
+struct GeneratedVisualization: Identifiable, Equatable {
+    let id: UUID
+    let imageData: Data?
+    let prompt: String
+    let dominantColors: [Color]
+    let storyAnalysis: GeneratedStoryAnalysis?
+    let createdAt: Date
+
+    init(
+        id: UUID = UUID(),
+        imageData: Data? = nil,
+        prompt: String,
+        dominantColors: [Color] = [],
+        storyAnalysis: GeneratedStoryAnalysis? = nil,
+        createdAt: Date = Date()
+    ) {
+        self.id = id
+        self.imageData = imageData
+        self.prompt = prompt
+        self.dominantColors = dominantColors
+        self.storyAnalysis = storyAnalysis
+        self.createdAt = createdAt
+    }
+}
+
+// MARK: - Story Analysis Result (Version 2.1)
+struct GeneratedStoryAnalysis: Equatable {
+    let centralStressor: String
+    let factors: [GeneratedEmotionalFactor]
+    let language: String
+
+    init(centralStressor: String, factors: [GeneratedEmotionalFactor], language: String) {
+        self.centralStressor = centralStressor
+        self.factors = factors
+        self.language = language
+    }
+
+    init(from apiResponse: StoryAnalysis) {
+        self.centralStressor = apiResponse.centralStressor
+        self.factors = apiResponse.factors.map { GeneratedEmotionalFactor(from: $0) }
+        self.language = apiResponse.language
+    }
+}
+
+struct GeneratedEmotionalFactor: Equatable {
+    let factor: String
+    let description: String
+
+    init(factor: String, description: String) {
+        self.factor = factor
+        self.description = description
+    }
+
+    init(from apiResponse: EmotionalFactor) {
+        self.factor = apiResponse.factor
+        self.description = apiResponse.description
+    }
+}
+
+// MARK: - Legacy Support
 struct EmotionInput: Equatable {
     var freeText: String = ""
     var feelingCategory: FeelingCategory?
@@ -115,22 +260,5 @@ struct EmotionInput: Equatable {
         freeText = ""
         feelingCategory = nil
         selectedEmotions = []
-    }
-}
-
-// MARK: - Generated Visualization Result
-struct GeneratedVisualization: Identifiable, Equatable {
-    let id: UUID
-    let imageData: Data?
-    let imageURL: String?
-    let prompt: String
-    let createdAt: Date
-
-    init(id: UUID = UUID(), imageData: Data? = nil, imageURL: String? = nil, prompt: String, createdAt: Date = Date()) {
-        self.id = id
-        self.imageData = imageData
-        self.imageURL = imageURL
-        self.prompt = prompt
-        self.createdAt = createdAt
     }
 }

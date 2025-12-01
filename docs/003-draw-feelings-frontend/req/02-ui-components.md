@@ -1,4 +1,4 @@
-# UI Components Specification
+# UI Components Specification (Version 2.0)
 
 ## 1. Cloud Components
 
@@ -28,15 +28,7 @@ CloudShape()
     .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 4)
 ```
 
-**Incorrect (Current Issue)**:
-- Drawing individual circles with borders visible
-- Transparent or semi-transparent fill
-- Visible construction lines inside the cloud
-
-**Correct**:
-- Single unified cloud silhouette
-- Solid opaque fill (white or light blue gradient)
-- Only the outer fluffy edge is visible
+---
 
 ### 1.2 Cloud #0 - Initial Cloud
 
@@ -44,9 +36,10 @@ CloudShape()
 
 **Visual Specifications**:
 - Size: 280pt width × 160pt height (approximate, maintains aspect ratio)
-- Background: Gradient from `#ADD8E6` to `#E0F4FF`
+- Background: Solid fill with gradient from `#ADD8E6` to `#E0F4FF`
 - Border: None
 - Shadow: Soft drop shadow
+- Opacity: 100% (fully opaque)
 
 **Content**:
 - Text: "How are you feeling?"
@@ -56,7 +49,7 @@ CloudShape()
 
 **Interaction**:
 - Tappable entire cloud area
-- On tap: Subtle scale animation (0.95 → 1.0) then transition to input mode
+- On tap: Subtle scale animation (0.95 → 1.0) then transition to questionnaire
 
 **Accessibility**:
 - Label: "How are you feeling? Tap to express your emotions"
@@ -66,16 +59,17 @@ CloudShape()
 
 ### 1.3 Cloud #1 - Free Text Input Cloud
 
-**Purpose**: Allow users to freely type their feelings
+**Purpose**: Allow users to share the story behind their feelings (appears after feeling visualization)
 
 **Visual Specifications**:
 - Size: 320pt width × 200pt height
-- Background: White with subtle blue tint (`#FAFCFF`)
-- Border: 1pt stroke, `#ADD8E6`
+- Background: Solid white `#FFFFFF` or `#F8FCFF`
+- Border: 1pt stroke, `#ADD8E6` on outer silhouette only
 - Shadow: Medium drop shadow
+- Opacity: 100% (fully opaque)
 
 **Content**:
-- Placeholder text: "Type how you're feeling..."
+- Placeholder text: "Tell me more about your feelings..."
 - Font: System, 16pt, Regular
 - Text color: `#333333`
 - Placeholder color: `#999999`
@@ -83,160 +77,252 @@ CloudShape()
 **Text Input Area**:
 - Multi-line `TextEditor`
 - Character limit: 5000 characters
+- Minimum required: 50 characters
 - Character counter displayed at bottom right: "0 / 5000"
 - Counter color: `#999999`, changes to `#E74C3C` when > 4500
 
 **Interaction**:
 - Tap to focus and show keyboard
 - Scrollable when content exceeds visible area
-- State persists when swiping between clouds
 
 **Accessibility**:
-- Label: "Free text input. Type how you're feeling."
-- Hint: "Maximum 5000 characters"
+- Label: "Tell me more about your feelings. Text input area."
+- Hint: "Minimum 50 characters, maximum 5000 characters"
 
 ---
 
-### 1.4 Cloud #2 - Questionnaire Cloud
+## 2. Questionnaire Components
 
-**Purpose**: Provide guided emotion selection entry point and display selection summary
+### 2.1 Level 1 - Feel Good?
 
-**Visual Specifications**:
-- Size: 320pt width × 200pt height (same as Cloud #1)
-- Background: Solid fill `#FFFFFF` (white) with gradient from `#E8F4FC` to `#F5FAFD`
-- Border: 1pt stroke, `#B0E0E6` on outer silhouette only
+**Layout**:
+```
+┌─────────────────────────────────────────┐
+│            "Feel good?"                 │
+│                                         │
+│     ┌─────────┐    ┌─────────┐         │
+│     │  Good   │    │   Bad   │         │
+│     └─────────┘    └─────────┘         │
+│                                         │
+│          ┌──────────────┐              │
+│          │   Not Sure   │              │
+│          └──────────────┘              │
+│                                         │
+│  [Back]                  [Start over]   │
+└─────────────────────────────────────────┘
+```
+
+**Title**:
+- Text: "Feel good?"
+- Font: System, 24pt, Semibold
+- Color: `#333333`
+
+**Option Buttons**:
+- Size: 120pt × 100pt
+- Corner radius: 20pt
+- Background (default): `#F5FAFD`
+- Background (selected): `#E0F4FF`
+- Border (default): 1pt `#D0E4EF`
+- Border (selected): 2pt `#87CEEB`
+
+---
+
+### 2.2 Level 2 - Emotion Selection
+
+**Layout**:
+```
+┌─────────────────────────────────────────┐
+│            "I feel like:"               │
+│                                         │
+│  ┌─────┐  ┌─────┐  ┌─────┐             │
+│  │Icon │  │Icon │  │Icon │             │
+│  │Label│  │Label│  │Label│             │
+│  └─────┘  └─────┘  └─────┘             │
+│  ┌─────┐  ┌─────┐  ┌─────┐             │
+│  │Icon │  │Icon │  │Icon │             │
+│  │Label│  │Label│  │Label│             │
+│  └─────┘  └─────┘  └─────┘             │
+│                                         │
+│  [Back]      [Done]      [Start over]   │
+└─────────────────────────────────────────┘
+```
+
+**Title**:
+- Text: "I feel like:"
+- Font: System, 24pt, Semibold
+- Color: `#333333`
+
+**Emotion Grid**:
+- 3 columns
+- Icon size: 60pt × 60pt
+- Grid spacing: 16pt horizontal, 20pt vertical
+
+**Done Button**:
+- Disabled until at least one emotion selected
+- Same style as primary action buttons
+
+---
+
+## 3. Result Screen Components
+
+### 3.1 Feeling Visualization Result
+
+**Layout**:
+```
+┌─────────────────────────────────────────┐
+│                                         │
+│    "I feel cozy, content and fuming."   │
+│                                         │
+│         ┌─────────────────┐             │
+│         │                 │             │
+│         │   Generated     │             │
+│         │   Image         │             │
+│         │                 │             │
+│         └─────────────────┘             │
+│                                         │
+│  [Let it out!]     [Know more about...]  │
+│                                         │
+│             [Start over]                │
+└─────────────────────────────────────────┘
+```
+
+**Summary Text**:
+- Text: "I feel [emotions]."
+- Font: System, 20pt, Medium
+- Color: `#333333`
+- Alignment: Center
+
+**Visualization Image**:
+- Size: Screen width - 48pt margins, square aspect ratio
+- Corner radius: 20pt
 - Shadow: Medium drop shadow
 
-#### State 1: Before Selection (Default)
+---
 
-**Content**:
-- Button: "Tap your moods"
-- Button style: Rounded rectangle (corner radius 16pt)
-- Button background: `#87CEEB`
-- Button text: White, 18pt, Semibold
-- Button size: 200pt × 50pt
+### 3.2 Story Visualization Result
 
-**Interaction**:
-- Tap button to start questionnaire flow
-- Button has hover/press state (darker blue `#6BB8D9`)
-
-**Accessibility**:
-- Button label: "Tap your moods. Start guided questionnaire."
-
-#### State 2: After Selection (With Summary)
-
-**Content**:
-- Summary text displayed on the cloud: "I feel cozy, content and fuming."
-- Text style: System, 18pt, Medium
-- Text color: `#333333`
-- Text alignment: Center (horizontally and vertically within cloud)
-- Multi-line wrapping if text is long
-
-**Summary Text Formatting**:
-- Single emotion: "I feel content."
-- Two emotions: "I feel content and chill."
-- Three+ emotions: "I feel cozy, content and fuming."
-- Emotion names displayed in **lowercase**
-
-**Interaction**:
-- Tap anywhere on cloud (or summary text) to re-enter questionnaire
-- This allows users to modify their selections
-- Checkmark badge remains visible (top-right)
-
-**Accessibility**:
-- Label: "Your mood selection: [summary]. Tap to modify."
+**Layout**:
+```
+┌─────────────────────────────────────────┐
+│                                         │
+│         ┌─────────────────┐             │
+│         │                 │             │
+│         │   Story         │             │
+│         │   Visualization │             │
+│         │                 │             │
+│         └─────────────────┘             │
+│                                         │
+│             [Let it out!]               │
+│                                         │
+│             [Start over]                │
+└─────────────────────────────────────────┘
+```
 
 ---
 
-## 2. Cloud Carousel
+## 4. Action Buttons
 
-### 2.1 Layout
+### 4.1 "Let it out!" Button
 
-**Structure**:
-- Container holds both Cloud #1 and Cloud #2
-- Clouds overlap with Cloud #1 in front initially
-- Visible portion of back cloud: ~30pt peek on the right edge
+**Purpose**: Trigger firework animation for emotional release (works for both positive and negative feelings)
 
-**Visual Indicators**:
-- Page dots below clouds (2 dots)
-- Active dot: `#87CEEB`, 8pt diameter
-- Inactive dot: `#D0D0D0`, 6pt diameter
-- Dot spacing: 12pt
+**Visual Specifications**:
+- Size: 140pt × 48pt
+- Corner radius: 24pt (pill shape)
+- Background: Linear gradient `#FFD700` to `#FFA500` (golden/warm)
+- Text: "Let it out!"
+- Text color: White
+- Font: 16pt, Semibold
+- Shadow: Soft drop shadow
 
-### 2.2 Swipe Behavior
+**States**:
+- Default: Full opacity
+- Pressed: Scale to 0.95, slightly darker
 
-**Gesture**:
-- Horizontal swipe (left/right) to switch between clouds
-- Swipe threshold: 50pt horizontal movement
-- Animation: Spring animation (response: 0.4, dampingFraction: 0.8)
-
-**Transitions**:
-- Front cloud slides out in swipe direction
-- Back cloud slides in from opposite side
-- Deck-of-cards visual effect with slight scale difference
-- Front cloud: scale 1.0
-- Back cloud: scale 0.95, slight vertical offset (+10pt)
+**Location**:
+- Feeling Result screen: Left side, next to "Know more about my feeling"
+- Story Result screen: Centered
 
 ---
 
-## 3. Action Buttons
+### 4.2 "Know more about my feeling" Button
 
-### 3.1 "Draw my feelings" Button (Main Action)
+**Purpose**: Navigate to free text input to explore feelings deeper
 
-**Location**: Fixed at bottom of screen, below cloud carousel
+**Visual Specifications**:
+- Size: 200pt × 48pt
+- Corner radius: 24pt (pill shape)
+- Background: Linear gradient `#87CEEB` to `#6BB8D9`
+- Text: "Know more about my feeling"
+- Text color: White
+- Font: 16pt, Semibold
+- Shadow: Soft drop shadow
+
+**States**:
+- Default: Full opacity
+- Pressed: Scale to 0.97, darker background
+
+---
+
+### 4.3 "Draw my story" Button
+
+**Purpose**: Submit free text and generate story visualization
 
 **Visual Specifications**:
 - Size: Screen width - 48pt margins × 56pt height
 - Corner radius: 28pt (pill shape)
 - Background (enabled): Linear gradient `#87CEEB` to `#6BB8D9`
 - Background (disabled): `#D0D0D0`
-- Text: "Draw my feelings"
+- Text: "Draw my story"
 - Text color (enabled): White
 - Text color (disabled): `#999999`
 - Font: 18pt, Semibold
-- Shadow: Subtle drop shadow when enabled
 
 **States**:
-- **Disabled**: No input provided (neither text nor questionnaire)
-- **Enabled**: At least one input source has content
+- **Disabled**: Less than 50 characters entered
+- **Enabled**: 50+ characters entered
 - Transition between states: 0.3s ease animation
 
-**Interaction**:
-- Tap to generate visualization
-- Press state: Scale to 0.97, darker background
-
 ---
 
-### 3.2 "Start over" Button
+### 4.4 "Done" Button (Questionnaire)
 
-**Location**:
-- During input mode: Top-left corner of screen (in navigation area)
-- On visualization result: Bottom of screen, below the image
+**Purpose**: Complete emotion selection and generate feeling visualization
 
 **Visual Specifications**:
-- Style: Text button (during input) / Secondary button (on result)
-- During input:
-  - Text only: "Start over"
-  - Color: `#666666`
-  - Font: 16pt, Regular
-  - With left-arrow icon (SF Symbol: `arrow.counterclockwise`)
-- On result screen:
-  - Rounded rectangle button
-  - Background: `#F0F8FF`
-  - Border: 1pt, `#ADD8E6`
-  - Text: "Start over"
-  - Text color: `#333333`
-  - Size: 140pt × 44pt
+- Size: 120pt × 48pt
+- Corner radius: 24pt
+- Background (enabled): Linear gradient `#87CEEB` to `#6BB8D9`
+- Background (disabled): `#D0D0D0`
+- Text: "Done"
+- Text color (enabled): White
+- Text color (disabled): `#999999`
+- Font: 16pt, Semibold
 
-**Interaction**:
-- Tap to reset all state and return to Cloud #0
-- Confirmation alert NOT required (quick action)
+**States**:
+- **Disabled**: No emotions selected
+- **Enabled**: At least one emotion selected
 
 ---
 
-### 3.3 "Back" Button (Questionnaire)
+### 4.5 "Start over" Button
 
-**Location**: Top-left of questionnaire views
+**Purpose**: Reset all state and return to Cloud #0
+
+**Visual Specifications**:
+- Style: Text button with icon
+- Text: "Start over"
+- Color: `#666666`
+- Font: 16pt, Regular
+- Icon: SF Symbol `arrow.counterclockwise` (left of text)
+
+**Location**: Bottom of screen on all screens after Cloud #0
+
+---
+
+### 4.6 "Back" Button
+
+**Purpose**: Navigate to previous step
 
 **Visual Specifications**:
 - Icon: SF Symbol `chevron.left`
@@ -244,51 +330,96 @@ CloudShape()
 - Icon size: 20pt
 - Color: `#333333`
 
-**Interaction**:
-- Level 2 → Level 1: Preserves Level 1 selection
-- Level 1 → Cloud #2: Exits questionnaire, returns to carousel
+**Location**: Top-left of questionnaire screens
 
 ---
 
-## 4. Input Validation Indicators
+## 5. Firework Animation Component
 
-### 4.1 Character Counter (Cloud #1)
+### 5.1 Visual Specifications
 
-**Location**: Bottom-right inside Cloud #1
+**Animation Type**: Particle-based firework burst
+
+**Trigger**: Tap "Let it out!" button
+
+**Behavior**:
+- Launch point: Bottom center of screen
+- Burst point: Center of screen (or slightly above)
+- Duration: 2 seconds per burst
+- Multiple bursts can overlap (rapid tapping allowed)
+
+**Colors**:
+- Extracted from the current visualization image
+- Use 3-4 dominant colors from the image
+- Fallback colors: `#FFD700`, `#FF6B6B`, `#4ECDC4`, `#A78BFA`
+
+**Particle Properties**:
+- Count: 50-100 particles per burst
+- Shape: Small circles or stars
+- Size: 4-8pt
+- Fade out over duration
+- Physics: Gravity-affected fall after burst
+
+**Sound**: None (silent animation)
+
+**Interaction**:
+- Does not block other UI interactions
+- Plays as overlay on current screen
+- Does not navigate away from current screen
+
+### 5.2 Implementation Hint
+
+```swift
+struct FireworkView: View {
+    let colors: [Color]
+    @State private var particles: [Particle] = []
+
+    func triggerFirework() {
+        // Generate particles with colors from visualization
+        // Animate burst and fall
+    }
+}
+```
+
+---
+
+## 6. Loading States
+
+### 6.1 Feeling Generation Loading
+
+**Display**: After tapping "Done" on questionnaire
+
+**Visual**:
+- Full screen with background `#F0F8FF`
+- Centered cloud icon with floating animation
+- Text: "Drawing your feelings..."
+- Animated dots after text
+- Cancel button at bottom
+
+### 6.2 Story Generation Loading
+
+**Display**: After tapping "Draw my story"
+
+**Visual**:
+- Full screen with background `#F0F8FF`
+- Centered cloud icon with floating animation
+- Text: "Understanding your story..."
+- Animated dots after text
+- Cancel button at bottom
+
+---
+
+## 7. Character Counter Component
+
+**Location**: Bottom-right inside Cloud #1 text area
 
 **Display Format**: "current / 5000"
 
 **Color States**:
-- 0-4500 characters: `#999999`
+- 0-49 characters: `#999999` (also shows "min 50")
+- 50-4500 characters: `#999999`
 - 4501-5000 characters: `#E74C3C` (warning red)
 
-### 4.2 Input Status Indicator
-
-**Location**: Small badge on each cloud in carousel
-
-**States**:
-- Empty: No indicator
-- Has content: Small checkmark badge
-  - Circle background: `#4CAF50`
-  - Checkmark: White
-  - Size: 24pt diameter
-  - Position: Top-right corner of cloud
-
----
-
-## 5. Loading State
-
-### 5.1 Generation Loading View
-
-**Displayed**: After tapping "Draw my feelings" while waiting for visualization
-
-**Visual**:
-- Full screen overlay with semi-transparent background (`#FFFFFF` at 90% opacity)
-- Centered cloud icon with gentle floating animation
-- Text below: "Creating your visualization..."
-- Animated dots after text (typing indicator style)
-- Cancel button at bottom: "Cancel" (returns to input mode)
-
-**Animation**:
-- Cloud gently bobs up and down (3pt movement, 2s duration, ease-in-out)
-- Optional: Soft pulsing glow effect
+**Additional Indicator**:
+- When < 50 chars: Show helper text "min 50 characters" below counter
+- Fades out when minimum is reached
