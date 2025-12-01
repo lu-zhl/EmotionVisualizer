@@ -124,12 +124,13 @@ Abstract art visualization with these characteristics:
 """
 
     STORY_BASE_STYLE = """
-Create a simplified 2D cartoon illustration with these characteristics:
-- Simple, flat 2D cartoon style (like a children's book illustration)
-- Gentle, pastel colors
-- Clear visual storytelling
+Create a minimalist 2D cartoon illustration with these characteristics:
+- Minimalist, flat 2D cartoon style (clean, simple, not detailed)
+- SYMMETRICAL composition - balanced layout with central focus
+- White or light neutral background
+- Gentle pastel colors
 - No text, letters, words, or numbers in the image
-- Soft, rounded shapes
+- Clean lines, minimal detail
 - Friendly and non-threatening visual style
 """
 
@@ -213,15 +214,27 @@ Create a simplified 2D cartoon illustration with these characteristics:
         colors = self._get_color_palette(selected_emotions, feeling_category)
         parts.append(f"\nCOLOR MOOD:\n{colors}")
 
-        # Updated final instruction for infographic style
+        # Updated final instruction for minimalist 2D cartoon with symmetrical composition
         parts.append("""
-Create a simplified 2D infographic-style illustration:
-- Central icon representing the main situation
-- Surrounding smaller icons representing the emotional factors
-- Clean lines, minimal detail, no text labels
-- Connected with simple lines or in a mind-map arrangement
-- Soft, appropriate colors based on emotional tone
-- Child-friendly, non-threatening visual style""")
+Create a minimalist 2D cartoon infographic:
+- SYMMETRICAL composition with balanced layout
+- Central icon in the middle representing the main situation
+- Surrounding icons arranged symmetrically around the center (like a mind-map)
+- Clean lines, flat design, minimal detail
+- NO text labels in the image
+- White or light neutral background
+- Connected with simple lines from center to surrounding icons
+- Soft pastel colors based on emotional tone
+- Child-friendly, non-threatening visual style
+
+Example composition:
+        [Factor]          [Factor]
+              \\              /
+               \\            /
+                [ Central  ]
+               /            \\
+              /              \\
+        [Factor]          [Factor]""")
 
         return "\n".join(parts)
 

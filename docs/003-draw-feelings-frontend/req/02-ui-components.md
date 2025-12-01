@@ -209,11 +209,62 @@ CloudShape()
 │         │                 │             │
 │         │   Story         │             │
 │         │   Visualization │             │
+│         │   (minimalist   │             │
+│         │   2D cartoon)   │             │
 │         │                 │             │
 │         └─────────────────┘             │
 │                                         │
+│      ┌─────────────────────────┐        │
+│      │  Central Stressor       │        │
+│      │  • Factor 1             │        │
+│      │  • Factor 2             │        │
+│      │  • Factor 3             │        │
+│      └─────────────────────────┘        │
+│                                         │
 │             [Let it out!]               │
 │                                         │
+│             [Start over]                │
+└─────────────────────────────────────────┘
+```
+
+**Story Analysis Display**:
+- Shows the `story_analysis` data from API response
+- Central stressor as header
+- 3-5 psychological factors as bullet list
+- Displayed below or alongside the visualization image
+- Font: System, 16pt for stressor, 14pt for factors
+- Color: `#333333`
+
+**Image Style**:
+- Minimalist 2D cartoon with symmetrical composition
+- Central icon for main stressor, surrounded by factor icons
+- No text labels in the image (labels displayed separately by iOS app)
+
+---
+
+### 3.3 Future Expansion: "Understand More" Feature
+
+> **Note**: This feature is planned for a future version.
+
+**Purpose**: Allow users to explore their psychological factors in more depth.
+
+**Planned Features**:
+- Tap on a factor to see detailed explanation
+- Show why AI identified this factor from the user's story
+- Pattern recognition across multiple stories ("You often mention Fear of Judgment")
+- Educational content about each psychological factor
+- Root cause exploration prompts
+
+**Placeholder UI** (future):
+```
+┌─────────────────────────────────────────┐
+│      [Story Visualization + Factors]    │
+│                                         │
+│  "Would you like to understand more?"   │
+│                                         │
+│         [Understand more]               │
+│                                         │
+│             [Let it out!]               │
 │             [Start over]                │
 └─────────────────────────────────────────┘
 ```

@@ -6,6 +6,46 @@ All notable changes to the EmotionVisualizer documentation and features are reco
 
 ## [004-mood-visualization-backend] - 2025-11-30
 
+### Version 2.2.0
+
+**Changes - AI Analysis & Image Style:**
+
+1. **Automatic Psychological Factor Analysis**
+   - AI now automatically analyzes user's story to identify root causes
+   - Identifies 3-5 general psychological factors (variable based on story)
+   - Examples: Social Anxiety, Fear of Judgment, Perfectionism, Lack of Preparation, High Expectations, Uncertainty, Loss of Control, Imposter Syndrome, Fear of Failure
+   - Documented two-step AI process: Text Analysis → Image Generation
+
+2. **Updated Image Style: Minimalist 2D Cartoon**
+   - Changed from "simplified 2D cartoon/infographic" to **"minimalist 2D cartoon"**
+   - Added **symmetrical composition** requirement
+   - Central icon for stressor, surrounding icons arranged symmetrically
+   - Added example composition diagram in `02-api-specification.md`
+   - White or light neutral background
+
+---
+
+## [003-draw-feelings-frontend] - 2025-11-30
+
+### Version 2.2.0
+
+**Changes:**
+
+1. **Story Result Screen Enhanced**
+   - Added story analysis display section (central stressor + factors list)
+   - Specified font sizes: 16pt for stressor header, 14pt for factors
+   - Analysis displayed below/alongside visualization image
+
+2. **Future Expansion: "Understand More" Feature (Placeholder)**
+   - Added section 3.3 documenting planned future feature
+   - Will allow users to explore psychological factors in depth
+   - Planned: tap factor for explanation, pattern recognition, educational content
+   - Placeholder UI included in `02-ui-components.md`
+
+---
+
+## [004-mood-visualization-backend] - 2025-11-30
+
 ### Version 2.1.0
 
 **Changes - Story Visualization Enhancements:**

@@ -209,14 +209,23 @@ Content-Type: application/json
 
 ### POST /api/v1/visualizations/story
 
-Generate a visualization that illustrates the reasons/story behind the user's feelings. This is the second visualization in the user journey.
+Generate a visualization that illustrates the **reasons and psychological factors** behind the user's feelings. This is the second visualization in the user journey.
 
 **Key Features**:
-- AI analyzes the user's story text to identify the central stressor and underlying emotional factors
-- Generates a **simplified 2D cartoon/infographic style** image (NOT abstract art)
+- AI **automatically analyzes** the user's story to identify the central stressor and underlying psychological factors
+- Identifies **3-5 general psychological factors** (e.g., "Social Anxiety", "Fear of Judgment", not specific details)
+- Generates a **minimalist 2D cartoon** image with **symmetrical composition**
 - Image shows icons representing the situation and emotional factors WITHOUT text labels
 - Returns a separate `story_analysis` JSON field with text labels for the iOS app to display
 - Output language matches the dominant language of the user's input
+
+**AI Analysis Process**:
+The backend performs a two-step process:
+1. **Step 1 - Text Analysis**: AI reads the user's story and identifies:
+   - The central stressor/situation
+   - 3-5 general psychological factors contributing to their emotional state
+   - Examples of factors: Social Anxiety, Fear of Judgment, Perfectionism, Lack of Preparation, High Expectations, Uncertainty, Loss of Control, Imposter Syndrome, Fear of Failure, etc.
+2. **Step 2 - Image Generation**: Based on the analysis, generate a minimalist infographic
 
 **Why No Text in Image**:
 AI image generators often struggle with accurate text rendering. Instead, we generate clean icon-based visuals and return the analysis as structured data for the iOS app to overlay or display alongside the image.
@@ -337,13 +346,27 @@ Content-Type: application/json
 | `generation_time_ms` | integer | Time taken to generate image |
 
 **Image Style Guidelines**:
-- Simplified 2D cartoon or infographic style
-- Central icon representing the main stressor/situation
-- Surrounding icons representing emotional factors
-- Clean lines, minimal detail
-- Connected with simple lines or arrows (mind-map style optional)
+- **Minimalist 2D cartoon** style (clean, simple, not detailed)
+- **Symmetrical composition** - balanced layout with central focus
+- Central icon representing the main stressor/situation (positioned in center)
+- Surrounding icons representing psychological factors (arranged symmetrically around center)
+- Clean lines, minimal detail, flat design
+- Connected with simple lines (mind-map style)
 - NO text labels in the image itself
 - Soft, appropriate colors based on emotional tone
+- White or light neutral background
+
+**Example Composition**:
+```
+        [Factor 1]          [Factor 2]
+              \                /
+               \              /
+                [  Central   ]
+                [ Stressor   ]
+               /              \
+              /                \
+        [Factor 3]          [Factor 4]
+```
 
 #### 3.4 Error Responses
 
