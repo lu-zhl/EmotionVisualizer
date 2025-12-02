@@ -25,7 +25,7 @@ struct DrawMyFeelingsView: View {
 
             if viewModel.state == .generatingStory {
                 GeneratingView(
-                    message: "Understanding your story...",
+                    message: "Analyzing your mood...",
                     onCancel: viewModel.cancelGeneration
                 )
                 .transition(.opacity)

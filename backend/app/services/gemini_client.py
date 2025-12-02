@@ -239,15 +239,15 @@ class GeminiClient:
 
         Creates different styles based on prompt type:
         - Abstract art for feeling visualizations (gradients with shapes)
-        - 2D cartoon style for story visualizations (scene with characters)
+        - Mind-map diagram for story visualizations (with labels and icons)
         """
         prompt_lower = prompt.lower()
 
-        # Check if this is a story visualization (2D cartoon) or feeling visualization (abstract)
-        is_story = "2d cartoon" in prompt_lower or "story to illustrate" in prompt_lower or "cartoon illustration" in prompt_lower
+        # Check if this is a story visualization (mind-map diagram) or feeling visualization (abstract)
+        is_story = "mind-map" in prompt_lower or "diagram" in prompt_lower or "central situation" in prompt_lower
 
         if is_story:
-            return self._generate_cartoon_placeholder(prompt_lower)
+            return self._generate_mindmap_placeholder(prompt)
         else:
             return self._generate_abstract_placeholder(prompt_lower)
 
@@ -310,155 +310,220 @@ class GeminiClient:
 
         return self._process_image(image)
 
-    def _generate_cartoon_placeholder(self, prompt_lower: str) -> Dict[str, Any]:
-        """Generate 2D cartoon-style placeholder with simple scene."""
-        from PIL import ImageDraw
+    def _generate_mindmap_placeholder(self, prompt: str) -> Dict[str, Any]:
+        """Generate mind-map diagram with fixed 4-corner layout (v2.4)."""
+        from PIL import ImageDraw, ImageFont
+        import re
 
-        # Determine scene mood based on emotions in prompt
-        if any(word in prompt_lower for word in ["happy", "joy", "pumped", "super happy"]):
-            sky_color = (255, 250, 220)  # Sunny yellow
-            ground_color = (180, 230, 180)  # Green grass
-            accent_color = (255, 200, 100)  # Sun yellow
-            mood = "happy"
-        elif any(word in prompt_lower for word in ["calm", "chill", "peaceful", "content", "cozy"]):
-            sky_color = (230, 245, 255)  # Calm blue sky
-            ground_color = (200, 220, 180)  # Soft green
-            accent_color = (255, 255, 200)  # Soft sun
-            mood = "calm"
-        elif any(word in prompt_lower for word in ["sad", "down", "blah"]):
-            sky_color = (210, 215, 225)  # Overcast
-            ground_color = (180, 190, 170)  # Muted green
-            accent_color = (190, 195, 205)  # Cloud gray
-            mood = "sad"
-        elif any(word in prompt_lower for word in ["angry", "fuming", "mad", "freaked"]):
-            sky_color = (240, 225, 225)  # Pinkish sky
-            ground_color = (190, 180, 170)  # Dusty ground
-            accent_color = (220, 180, 180)  # Warm accent
-            mood = "intense"
-        else:
-            sky_color = (235, 245, 255)  # Neutral sky
-            ground_color = (190, 210, 180)  # Neutral grass
-            accent_color = (255, 240, 200)  # Neutral sun
-            mood = "neutral"
+        # Parse the prompt to extract central stressor and factors
+        central_stressor = "Main Issue"
+        factors = []
 
-        # Create base image
-        image = Image.new('RGB', (self.image_size, self.image_size), sky_color)
+        # Extract central stressor
+        central_match = re.search(r'label "([^"]+)" below it', prompt)
+        if central_match:
+            central_stressor = central_match.group(1)
+
+        # Extract factors
+        factor_matches = re.findall(r'Icon \+ label: "([^"]+)"', prompt)
+        if factor_matches:
+            factors = factor_matches[:4]  # Max 4 factors for 4-corner layout
+
+        # If no factors found, use defaults
+        if not factors:
+            factors = ["Factor 1", "Factor 2", "Factor 3", "Factor 4"]
+
+        # Pad to 4 factors if needed
+        while len(factors) < 4:
+            factors.append("")
+
+        # Colors
+        bg_color = (250, 252, 255)  # Very light blue-white
+        center_color = (135, 206, 235)  # Sky blue
+        factor_colors = [
+            (255, 182, 193),  # Light pink - top-left
+            (176, 224, 230),  # Powder blue - top-right
+            (255, 218, 185),  # Peach - bottom-left
+            (221, 160, 221),  # Plum - bottom-right
+        ]
+        line_color = (180, 180, 190)  # Light gray
+        text_color = (60, 60, 70)  # Dark gray
+
+        # Create image
+        image = Image.new('RGB', (self.image_size, self.image_size), bg_color)
         draw = ImageDraw.Draw(image)
 
-        # Draw ground (lower third)
-        ground_y = int(self.image_size * 0.7)
-        draw.rectangle([0, ground_y, self.image_size, self.image_size], fill=ground_color)
+        center_x = self.image_size // 2
+        center_y = self.image_size // 2
 
-        # Draw sun or cloud based on mood
-        if mood in ["happy", "calm", "neutral"]:
-            # Draw sun
-            sun_x = int(self.image_size * 0.8)
-            sun_y = int(self.image_size * 0.15)
-            sun_radius = int(self.image_size * 0.08)
-            draw.ellipse(
-                [sun_x - sun_radius, sun_y - sun_radius,
-                 sun_x + sun_radius, sun_y + sun_radius],
-                fill=accent_color
-            )
-        else:
-            # Draw clouds
-            cloud_y = int(self.image_size * 0.15)
-            for cloud_x in [int(self.image_size * 0.3), int(self.image_size * 0.7)]:
-                for dx, dy, r in [(0, 0, 25), (-20, 5, 20), (20, 5, 20), (0, -10, 18)]:
-                    draw.ellipse(
-                        [cloud_x + dx - r, cloud_y + dy - r,
-                         cloud_x + dx + r, cloud_y + dy + r],
-                        fill=accent_color
-                    )
+        # Icon sizes
+        center_radius = int(self.image_size * 0.10)
+        factor_radius = int(self.image_size * 0.065)
 
-        # Draw simple stick figure character
-        char_x = int(self.image_size * 0.5)
-        char_y = int(self.image_size * 0.55)
+        # Fixed 4-corner positions (as per v2.4 spec)
+        # Zone 1 (top-left): x: 0-40%, y: 0-40% -> center at 20%, 20%
+        # Zone 2 (top-right): x: 60-100%, y: 0-40% -> center at 80%, 20%
+        # Zone 3 (bottom-left): x: 0-40%, y: 60-100% -> center at 20%, 80%
+        # Zone 4 (bottom-right): x: 60-100%, y: 60-100% -> center at 80%, 80%
+        corner_positions = [
+            (int(self.image_size * 0.22), int(self.image_size * 0.22)),  # top-left
+            (int(self.image_size * 0.78), int(self.image_size * 0.22)),  # top-right
+            (int(self.image_size * 0.22), int(self.image_size * 0.78)),  # bottom-left
+            (int(self.image_size * 0.78), int(self.image_size * 0.78)),  # bottom-right
+        ]
+        factor_positions = corner_positions[:len(factors)]
 
-        # Character color
-        char_color = (100, 100, 100)  # Gray for stick figure
-        head_color = (255, 220, 180)  # Skin tone
+        # Draw connecting lines first (so they're behind icons)
+        for fx, fy in factor_positions:
+            draw.line([center_x, center_y, fx, fy], fill=line_color, width=2)
 
-        # Head
-        head_radius = int(self.image_size * 0.05)
+        # Draw central icon (larger circle)
         draw.ellipse(
-            [char_x - head_radius, char_y - head_radius,
-             char_x + head_radius, char_y + head_radius],
-            fill=head_color,
-            outline=char_color,
+            [center_x - center_radius, center_y - center_radius,
+             center_x + center_radius, center_y + center_radius],
+            fill=center_color,
+            outline=(100, 150, 180),
             width=2
         )
 
-        # Simple face based on mood
-        eye_y = char_y - int(head_radius * 0.2)
-        eye_offset = int(head_radius * 0.4)
-        eye_size = 3
+        # Draw a simple icon inside center (target/bullseye)
+        inner_r1 = center_radius - 15
+        inner_r2 = center_radius - 30
+        if inner_r1 > 5:
+            draw.ellipse(
+                [center_x - inner_r1, center_y - inner_r1,
+                 center_x + inner_r1, center_y + inner_r1],
+                outline=(100, 150, 180),
+                width=2
+            )
+        if inner_r2 > 5:
+            draw.ellipse(
+                [center_x - inner_r2, center_y - inner_r2,
+                 center_x + inner_r2, center_y + inner_r2],
+                fill=(100, 150, 180)
+            )
 
-        # Eyes
-        draw.ellipse([char_x - eye_offset - eye_size, eye_y - eye_size,
-                      char_x - eye_offset + eye_size, eye_y + eye_size], fill=char_color)
-        draw.ellipse([char_x + eye_offset - eye_size, eye_y - eye_size,
-                      char_x + eye_offset + eye_size, eye_y + eye_size], fill=char_color)
+        # Draw factor icons
+        for i, (fx, fy) in enumerate(factor_positions):
+            color = factor_colors[i % len(factor_colors)]
+            outline_color = tuple(max(0, c - 40) for c in color)
 
-        # Mouth based on mood
-        mouth_y = char_y + int(head_radius * 0.4)
-        mouth_width = int(head_radius * 0.6)
-        if mood == "happy":
-            # Smile
-            draw.arc([char_x - mouth_width, mouth_y - mouth_width//2,
-                      char_x + mouth_width, mouth_y + mouth_width//2],
-                     0, 180, fill=char_color, width=2)
-        elif mood in ["sad", "down"]:
-            # Frown
-            draw.arc([char_x - mouth_width, mouth_y,
-                      char_x + mouth_width, mouth_y + mouth_width],
-                     180, 360, fill=char_color, width=2)
+            # Draw circle
+            draw.ellipse(
+                [fx - factor_radius, fy - factor_radius,
+                 fx + factor_radius, fy + factor_radius],
+                fill=color,
+                outline=outline_color,
+                width=2
+            )
+
+            # Draw simple icon inside (different for each)
+            icon_size = factor_radius - 10
+            if i == 0:  # Warning triangle
+                points = [
+                    (fx, fy - icon_size),
+                    (fx - icon_size, fy + icon_size//2),
+                    (fx + icon_size, fy + icon_size//2)
+                ]
+                draw.polygon(points, outline=outline_color, width=2)
+            elif i == 1:  # Circle
+                draw.ellipse(
+                    [fx - icon_size//2, fy - icon_size//2,
+                     fx + icon_size//2, fy + icon_size//2],
+                    outline=outline_color,
+                    width=2
+                )
+            elif i == 2:  # Square
+                draw.rectangle(
+                    [fx - icon_size//2, fy - icon_size//2,
+                     fx + icon_size//2, fy + icon_size//2],
+                    outline=outline_color,
+                    width=2
+                )
+            elif i == 3:  # Diamond
+                points = [
+                    (fx, fy - icon_size),
+                    (fx + icon_size, fy),
+                    (fx, fy + icon_size),
+                    (fx - icon_size, fy)
+                ]
+                draw.polygon(points, outline=outline_color, width=2)
+            else:  # Star-like
+                draw.line([fx - icon_size, fy, fx + icon_size, fy], fill=outline_color, width=2)
+                draw.line([fx, fy - icon_size, fx, fy + icon_size], fill=outline_color, width=2)
+
+        # Try to load a font, fall back to default
+        try:
+            font_large = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 18)
+            font_small = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 14)
+        except:
+            try:
+                font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 18)
+                font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
+            except:
+                font_large = ImageFont.load_default()
+                font_small = ImageFont.load_default()
+
+        # Draw central label (below center icon)
+        # Wrap text if too long
+        max_chars = 25
+        if len(central_stressor) > max_chars:
+            words = central_stressor.split()
+            lines = []
+            current_line = ""
+            for word in words:
+                if len(current_line + " " + word) <= max_chars:
+                    current_line = (current_line + " " + word).strip()
+                else:
+                    if current_line:
+                        lines.append(current_line)
+                    current_line = word
+            if current_line:
+                lines.append(current_line)
         else:
-            # Neutral line
-            draw.line([char_x - mouth_width//2, mouth_y,
-                       char_x + mouth_width//2, mouth_y], fill=char_color, width=2)
+            lines = [central_stressor]
 
-        # Body
-        body_top = char_y + head_radius
-        body_bottom = int(self.image_size * 0.68)
-        draw.line([char_x, body_top, char_x, body_bottom], fill=char_color, width=3)
+        label_y = center_y + center_radius + 10
+        for line in lines:
+            bbox = draw.textbbox((0, 0), line, font=font_large)
+            text_width = bbox[2] - bbox[0]
+            draw.text(
+                (center_x - text_width // 2, label_y),
+                line,
+                fill=text_color,
+                font=font_large
+            )
+            label_y += 20
 
-        # Arms
-        arm_y = body_top + int((body_bottom - body_top) * 0.3)
-        arm_length = int(self.image_size * 0.06)
-        if mood == "happy":
-            # Arms up
-            draw.line([char_x, arm_y, char_x - arm_length, arm_y - arm_length//2], fill=char_color, width=3)
-            draw.line([char_x, arm_y, char_x + arm_length, arm_y - arm_length//2], fill=char_color, width=3)
-        else:
-            # Arms down
-            draw.line([char_x, arm_y, char_x - arm_length, arm_y + arm_length//2], fill=char_color, width=3)
-            draw.line([char_x, arm_y, char_x + arm_length, arm_y + arm_length//2], fill=char_color, width=3)
+        # Draw factor labels
+        for i, (fx, fy) in enumerate(factor_positions):
+            if i < len(factors):
+                label = factors[i]
+                # Wrap if needed
+                if len(label) > 18:
+                    words = label.split()
+                    if len(words) >= 2:
+                        mid = len(words) // 2
+                        line1 = " ".join(words[:mid])
+                        line2 = " ".join(words[mid:])
+                        lines = [line1, line2]
+                    else:
+                        lines = [label[:18], label[18:]] if len(label) > 18 else [label]
+                else:
+                    lines = [label]
 
-        # Legs
-        leg_length = int(self.image_size * 0.05)
-        draw.line([char_x, body_bottom, char_x - leg_length//2, ground_y - 5], fill=char_color, width=3)
-        draw.line([char_x, body_bottom, char_x + leg_length//2, ground_y - 5], fill=char_color, width=3)
-
-        # Add some simple scenery elements
-        # Tree on the left
-        tree_x = int(self.image_size * 0.15)
-        trunk_width = 8
-        trunk_height = int(self.image_size * 0.12)
-        trunk_bottom = ground_y
-        trunk_top = trunk_bottom - trunk_height
-
-        # Trunk
-        draw.rectangle([tree_x - trunk_width//2, trunk_top,
-                        tree_x + trunk_width//2, trunk_bottom],
-                       fill=(139, 90, 43))
-
-        # Leaves (simple circle)
-        leaves_radius = int(self.image_size * 0.07)
-        leaves_color = (100, 180, 100) if mood != "sad" else (120, 150, 120)
-        draw.ellipse([tree_x - leaves_radius, trunk_top - leaves_radius,
-                      tree_x + leaves_radius, trunk_top + leaves_radius//2],
-                     fill=leaves_color)
+                # Position label below the icon
+                label_y = fy + factor_radius + 8
+                for line in lines:
+                    bbox = draw.textbbox((0, 0), line, font=font_small)
+                    text_width = bbox[2] - bbox[0]
+                    draw.text(
+                        (fx - text_width // 2, label_y),
+                        line,
+                        fill=text_color,
+                        font=font_small
+                    )
+                    label_y += 16
 
         return self._process_image(image)
 

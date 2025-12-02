@@ -209,26 +209,41 @@ Content-Type: application/json
 
 ### POST /api/v1/visualizations/story
 
-Generate a visualization that illustrates the **reasons and psychological factors** behind the user's feelings. This is the second visualization in the user journey.
+Generate a visualization that illustrates the **deep psychological reasons** behind the user's feelings. This is the second visualization in the user journey - it helps users understand **WHY** they feel a certain way.
 
 **Key Features**:
 - AI **automatically analyzes** the user's story to identify the central stressor and underlying psychological factors
-- Identifies **3-5 general psychological factors** (e.g., "Social Anxiety", "Fear of Judgment", not specific details)
-- Generates a **minimalist 2D cartoon** image with **symmetrical composition**
-- Image shows icons representing the situation and emotional factors WITHOUT text labels
-- Returns a separate `story_analysis` JSON field with text labels for the iOS app to display
-- Output language matches the dominant language of the user's input
+- Provides **psychological insights** - not just surface descriptions, but deeper understanding
+- Identifies **3-5 general psychological factors** with insights including:
+  - **Psychological root causes** (e.g., evolutionary need for acceptance)
+  - **Cognitive bias explanations** (explained without naming the bias)
+  - **Light sociological context** (e.g., workplace dynamics)
+- Generates a **minimalist 2D cartoon** image with **symmetrical composition** and **text labels**
+- Text in image uses **Title Case** and **matches user's input language**
+- Central stressor shown as **general category** (e.g., "Public Performance Anxiety" not "Company Annual Gala")
 
 **AI Analysis Process**:
 The backend performs a two-step process:
-1. **Step 1 - Text Analysis**: AI reads the user's story and identifies:
-   - The central stressor/situation
-   - 3-5 general psychological factors contributing to their emotional state
-   - Examples of factors: Social Anxiety, Fear of Judgment, Perfectionism, Lack of Preparation, High Expectations, Uncertainty, Loss of Control, Imposter Syndrome, Fear of Failure, etc.
-2. **Step 2 - Image Generation**: Based on the analysis, generate a minimalist infographic
 
-**Why No Text in Image**:
-AI image generators often struggle with accurate text rendering. Instead, we generate clean icon-based visuals and return the analysis as structured data for the iOS app to overlay or display alongside the image.
+1. **Step 1 - Deep Psychological Analysis**: AI reads the user's story and identifies:
+   - The **central stressor** as a general category (e.g., "Public Performance Anxiety", "Workplace Conflict", "Achievement Pressure")
+   - **3-5 psychological factors** contributing to their emotional state
+   - For each factor, provide a **brief insight** that includes:
+     - Psychological root cause (why humans experience this)
+     - Cognitive bias explanation WITHOUT naming the bias (e.g., "We tend to overestimate how much others notice our mistakes" instead of "Spotlight Effect")
+     - Light sociological context when relevant (e.g., workplace hierarchies, social expectations)
+   - Keep insights **brief and short** - AI decides length but concise is preferred
+
+2. **Step 2 - Image Generation**: Generate a minimalist infographic WITH text labels
+
+**Example Analysis Depth**:
+
+| Surface Level (❌ Don't want) | Deep Insight (✅ Want) |
+|------------------------------|------------------------|
+| "Fear of Judgment - Afraid of being mocked" | "Fear of Judgment - We tend to overestimate how much others scrutinize us; colleagues are likely focused on their own concerns. Workplace hierarchies can amplify this feeling." |
+| "Social Anxiety - Worry about performing" | "Social Anxiety - Rooted in our deep need for group acceptance; being observed by peers can trigger protective instincts." |
+
+**Note**: Reframing perspectives (e.g., "Try thinking of it as...") are reserved for future "strategies/suggestions" feature.
 
 #### 3.1 Request
 
@@ -294,26 +309,26 @@ Content-Type: application/json
       "width": 512,
       "height": 512
     },
-    "prompt_used": "Simplified 2D infographic showing a person at microphone with surrounding icons representing anxiety, judgment, and preparation concerns...",
+    "prompt_used": "Minimalist 2D infographic with symmetrical composition. Central: Public Performance Anxiety with microphone icon. Surrounding factors with icons and labels: Social Anxiety, Fear of Judgment, Perfectionism, Lack of Preparation...",
     "dominant_colors": ["#A8E6CF", "#FFE4A0", "#B0C4D4"],
     "story_analysis": {
-      "central_stressor": "Company Annual Gala Performance",
+      "central_stressor": "Public Performance Anxiety",
       "factors": [
         {
           "factor": "Social Anxiety",
-          "description": "Worry about performing in front of colleagues"
+          "insight": "Rooted in our deep need for group acceptance; being observed by peers can trigger protective instincts that evolved to keep us safe within our social group."
         },
         {
           "factor": "Fear of Judgment",
-          "description": "Afraid of being mocked or criticized"
+          "insight": "We tend to overestimate how much others scrutinize us; colleagues are likely focused on their own concerns. Workplace hierarchies can amplify this feeling."
         },
         {
           "factor": "Perfectionism",
-          "description": "Want to perform flawlessly"
+          "insight": "Often linked to self-worth being tied to achievement; the pressure to perform flawlessly can stem from early experiences where love felt conditional on success."
         },
         {
           "factor": "Lack of Preparation",
-          "description": "Feel under-practiced or unfamiliar with the song"
+          "insight": "Uncertainty about readiness creates a sense of vulnerability; our minds naturally seek control, and feeling unprepared threatens that sense of security."
         }
       ],
       "language": "zh"
@@ -322,7 +337,7 @@ Content-Type: application/json
   },
   "meta": {
     "timestamp": "2025-11-26T12:00:00Z",
-    "api_version": "2.1"
+    "api_version": "2.3"
   }
 }
 ```
@@ -331,42 +346,80 @@ Content-Type: application/json
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `image_data` | string | Base64 encoded PNG image (cartoon/infographic style, no text labels) |
+| `image_data` | string | Base64 encoded PNG image with text labels |
 | `image_format` | string | Always "png" |
 | `image_size.width` | integer | Image width in pixels |
 | `image_size.height` | integer | Image height in pixels |
 | `prompt_used` | string | The prompt sent to Gemini (for debugging) |
 | `dominant_colors` | array | 3-4 hex color codes extracted from image (for firework animation) |
-| `story_analysis` | object | AI-generated analysis of the user's story |
-| `story_analysis.central_stressor` | string | The main situation/stressor identified |
-| `story_analysis.factors` | array | List of emotional factors contributing to feelings |
-| `story_analysis.factors[].factor` | string | Name of the emotional factor |
-| `story_analysis.factors[].description` | string | Brief explanation of how this factor relates to the story |
+| `story_analysis` | object | AI-generated deep psychological analysis |
+| `story_analysis.central_stressor` | string | General category of the stressor (e.g., "Public Performance Anxiety") |
+| `story_analysis.factors` | array | List of 3-5 psychological factors |
+| `story_analysis.factors[].factor` | string | Name of the psychological factor (Title Case) |
+| `story_analysis.factors[].insight` | string | Brief psychological insight including root causes, cognitive bias explanations (without naming), and sociological context |
 | `story_analysis.language` | string | Detected dominant language code (e.g., "en", "zh") |
 | `generation_time_ms` | integer | Time taken to generate image |
 
 **Image Style Guidelines**:
-- **Minimalist 2D cartoon** style (clean, simple, not detailed)
-- **Symmetrical composition** - balanced layout with central focus
-- Central icon representing the main stressor/situation (positioned in center)
-- Surrounding icons representing psychological factors (arranged symmetrically around center)
+- **Minimalist 2D infographic** style (clean, simple, not detailed)
+- **Symmetrical 4-corner composition** - factors positioned in corners, stressor in center
+- **Text labels included** in the image (Title Case, matching user's input language)
+- Central icon + label representing the main stressor (positioned in exact center)
+- **4 factor icons with labels** in fixed corner positions:
+  - **Top-left corner**: Factor 1
+  - **Top-right corner**: Factor 2
+  - **Bottom-left corner**: Factor 3
+  - **Bottom-right corner**: Factor 4
+- If only 3 factors identified, leave bottom-right empty (keep layout consistent)
+- If 5 factors identified, group related factors together in one corner
 - Clean lines, minimal detail, flat design
-- Connected with simple lines (mind-map style)
-- NO text labels in the image itself
+- Connected with simple lines from corners to center (mind-map style)
 - Soft, appropriate colors based on emotional tone
 - White or light neutral background
+- **Icons must be clearly distinct** and positioned within their corner zone
 
-**Example Composition**:
+**Fixed Layout Template** (IMPORTANT - always follow this structure):
 ```
-        [Factor 1]          [Factor 2]
-              \                /
-               \              /
-                [  Central   ]
-                [ Stressor   ]
-               /              \
-              /                \
-        [Factor 3]          [Factor 4]
+┌─────────────────────────────────────────┐
+│                                         │
+│  [Icon]                      [Icon]     │
+│  Factor 1                   Factor 2    │
+│  (top-left)                (top-right)  │
+│          \                    /         │
+│           \                  /          │
+│            \                /           │
+│             [Central Icon]              │
+│             Central Stressor            │
+│            /                \           │
+│           /                  \          │
+│          /                    \         │
+│  [Icon]                      [Icon]     │
+│  Factor 3                   Factor 4    │
+│  (bottom-left)           (bottom-right) │
+│                                         │
+└─────────────────────────────────────────┘
 ```
+
+**Icon Center Positions** (as percentage of image):
+- Top-left: x: 22%, y: 22%
+- Top-right: x: 78%, y: 22%
+- Bottom-left: x: 22%, y: 78%
+- Bottom-right: x: 78%, y: 78%
+- Center (stressor): x: 50%, y: 50%
+
+**Factor Order in Response**:
+The `story_analysis.factors` array should be ordered to match the corner positions:
+- `factors[0]` → Top-left corner (22%, 22%)
+- `factors[1]` → Top-right corner (78%, 22%)
+- `factors[2]` → Bottom-left corner (22%, 78%)
+- `factors[3]` → Bottom-right corner (78%, 78%) - if present
+
+**Image Text Requirements**:
+- All text in **Title Case** (e.g., "Fear of Judgment")
+- Text language **matches user's input language**
+- Text must be **clearly readable** and **correctly spelled**
+- Factor labels should be concise (2-4 words max)
+- Central stressor label can be slightly longer (up to 5 words)
 
 #### 3.4 Error Responses
 
@@ -572,7 +625,7 @@ struct StoryVisualizationResponse: Codable {
 
     struct StoryAnalysis: Codable {
         let centralStressor: String
-        let factors: [EmotionalFactor]
+        let factors: [PsychologicalFactor]
         let language: String
 
         enum CodingKeys: String, CodingKey {
@@ -582,9 +635,9 @@ struct StoryVisualizationResponse: Codable {
         }
     }
 
-    struct EmotionalFactor: Codable {
+    struct PsychologicalFactor: Codable {
         let factor: String
-        let description: String
+        let insight: String
     }
 }
 ```

@@ -1,9 +1,9 @@
 """
-Prompt Builder for Mood Visualization (Version 2.0)
+Prompt Builder for Mood Visualization (Version 2.3)
 
 Constructs image generation prompts:
 - Feeling visualization: Abstract art from emotions
-- Story visualization: 2D cartoon from text + emotions
+- Story visualization: 2D cartoon with TEXT LABELS from text + emotions
 """
 
 from typing import List, Optional
@@ -124,14 +124,25 @@ Abstract art visualization with these characteristics:
 """
 
     STORY_BASE_STYLE = """
-Create a minimalist 2D cartoon illustration with these characteristics:
-- Minimalist, flat 2D cartoon style (clean, simple, not detailed)
-- SYMMETRICAL composition - balanced layout with central focus
-- White or light neutral background
-- Gentle pastel colors
-- No text, letters, words, or numbers in the image
-- Clean lines, minimal detail
-- Friendly and non-threatening visual style
+Create a MIND-MAP DIAGRAM (NOT a scene illustration):
+
+CRITICAL: This is a DIAGRAM/INFOGRAPHIC, NOT a picture of a person or scene.
+- DO NOT draw people, faces, stick figures, landscapes, or scenes
+- DO draw a MIND-MAP with icons and text labels
+- This should look like a concept map or infographic diagram
+
+STRUCTURE:
+- ONE central icon in the CENTER with a text label below it
+- 3-5 surrounding icons arranged SYMMETRICALLY around the center
+- Each surrounding icon has a text label below it
+- Simple LINES connecting the center to each surrounding icon
+
+STYLE:
+- Simple flat icons (like emoji or app icons)
+- White or very light background
+- Soft pastel colors
+- Clean, readable text labels in Title Case
+- Professional infographic/diagram look
 """
 
     def build_feeling_prompt(
@@ -175,7 +186,8 @@ Create a minimalist 2D cartoon illustration with these characteristics:
         feeling_category: str,
         selected_emotions: List[str],
         central_stressor: Optional[str] = None,
-        factors: Optional[List[dict]] = None
+        factors: Optional[List[dict]] = None,
+        language: Optional[str] = "en"
     ) -> str:
         """
         Build a prompt for story visualization (2D cartoon/infographic from text + emotions).
@@ -185,10 +197,11 @@ Create a minimalist 2D cartoon illustration with these characteristics:
             feeling_category: "good", "bad", or "not_sure"
             selected_emotions: List of emotion IDs
             central_stressor: The main situation identified (from story analysis)
-            factors: List of emotional factors (from story analysis)
+            factors: List of psychological factors (from story analysis)
+            language: Language code for text labels (e.g., "en", "zh")
 
         Returns:
-            Complete prompt string for story infographic generation
+            Complete prompt string for story infographic generation with text labels
         """
         parts = [self.STORY_BASE_STYLE]
 
@@ -214,27 +227,57 @@ Create a minimalist 2D cartoon illustration with these characteristics:
         colors = self._get_color_palette(selected_emotions, feeling_category)
         parts.append(f"\nCOLOR MOOD:\n{colors}")
 
-        # Updated final instruction for minimalist 2D cartoon with symmetrical composition
-        parts.append("""
-Create a minimalist 2D cartoon infographic:
-- SYMMETRICAL composition with balanced layout
-- Central icon in the middle representing the main situation
-- Surrounding icons arranged symmetrically around the center (like a mind-map)
-- Clean lines, flat design, minimal detail
-- NO text labels in the image
-- White or light neutral background
-- Connected with simple lines from center to surrounding icons
-- Soft pastel colors based on emotional tone
-- Child-friendly, non-threatening visual style
+        # Determine language instruction
+        if language == "zh":
+            lang_instruction = "All text labels MUST be in Chinese (简体中文)"
+        else:
+            lang_instruction = "All text labels MUST be in English"
 
-Example composition:
-        [Factor]          [Factor]
-              \\              /
-               \\            /
-                [ Central  ]
-               /            \\
-              /              \\
-        [Factor]          [Factor]""")
+        # Build the specific elements to include
+        central_label = central_stressor if central_stressor else "Main Issue"
+        factor_labels = []
+        if factors:
+            factor_labels = [f.get("factor", "") for f in factors if f.get("factor")]
+
+        # Create explicit layout instruction
+        factors_list = "\n".join(f"  - Icon + label: \"{name}\"" for name in factor_labels[:5]) if factor_labels else "  - (surrounding factors)"
+
+        # Updated final instruction - very explicit about diagram format
+        parts.append(f"""
+IMPORTANT: Create a MIND-MAP DIAGRAM, not a scene!
+
+EXACT LAYOUT REQUIRED:
+1. CENTER: One icon representing the main issue with label "{central_label}" below it
+2. SURROUNDING: {len(factor_labels)} icons arranged in a circle/symmetrical pattern around the center:
+{factors_list}
+3. LINES: Draw simple straight lines connecting each surrounding icon to the center
+
+WHAT TO DRAW:
+- Simple symbolic icons (like 🎯 📊 💭 ⚡ 🔄 but as simple drawings)
+- Each icon should be a simple shape representing the concept
+- Text labels clearly visible below each icon
+- {lang_instruction}
+
+WHAT NOT TO DRAW:
+- NO people, faces, or human figures
+- NO landscapes, trees, clouds, or nature scenes
+- NO emotional expressions or mood illustrations
+- NO complex detailed artwork
+
+The final image should look like a BUSINESS PRESENTATION DIAGRAM or CONCEPT MAP, not an artistic illustration.
+
+EXAMPLE ASCII LAYOUT:
+         [Icon]              [Icon]
+      "{factor_labels[0] if len(factor_labels) > 0 else 'Factor 1'}"    "{factor_labels[1] if len(factor_labels) > 1 else 'Factor 2'}"
+              \\                /
+               \\              /
+                 [Icon]
+              "{central_label}"
+               /              \\
+              /                \\
+         [Icon]              [Icon]
+      "{factor_labels[2] if len(factor_labels) > 2 else 'Factor 3'}"    "{factor_labels[3] if len(factor_labels) > 3 else 'Factor 4'}"
+""")
 
         return "\n".join(parts)
 

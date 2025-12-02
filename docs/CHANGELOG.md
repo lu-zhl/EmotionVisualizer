@@ -4,6 +4,146 @@ All notable changes to the EmotionVisualizer documentation and features are reco
 
 ---
 
+## [004-mood-visualization-backend] - 2025-12-01
+
+### Version 2.4.0
+
+**Changes - Fixed 4-Corner Layout:**
+
+1. **Explicit 4-Corner Composition**
+   - Updated image style from generic "symmetrical" to **fixed 4-corner layout**
+   - Factors positioned at exact corner coordinates:
+     - Top-left: (22%, 22%)
+     - Top-right: (78%, 22%)
+     - Bottom-left: (22%, 78%)
+     - Bottom-right: (78%, 78%)
+   - Central stressor icon at exact center (50%, 50%)
+   - Added fixed layout template diagram
+
+2. **Factor-to-Corner Mapping**
+   - `factors[0]` → Top-left corner (22%, 22%)
+   - `factors[1]` → Top-right corner (78%, 22%)
+   - `factors[2]` → Bottom-left corner (22%, 78%)
+   - `factors[3]` → Bottom-right corner (78%, 78%)
+   - If 3 factors: bottom-right left empty
+   - If 5 factors: group related factors in one corner
+
+**Files Modified:**
+- `docs/004-mood-visualization-backend/req/02-api-specification.md` - v2.4 with fixed 4-corner layout
+
+---
+
+## [003-draw-feelings-frontend] - 2025-12-01
+
+### Version 2.4.0
+
+**Changes - Tappable Image Infographic:**
+
+1. **Removed Text List Below Image**
+   - Factor list NO longer displayed as text below the image
+   - All factors shown IN the image only
+   - Users tap icons in the image to see insights
+
+2. **Circular Tappable Factor Icons**
+   - **Shape**: Circular tap targets (not rectangular zones)
+   - **Diameter**: 18% of image size
+   - **Center positions** (matching icon locations):
+     - Zone 1 (top-left): x: 22%, y: 22%
+     - Zone 2 (top-right): x: 78%, y: 22%
+     - Zone 3 (bottom-left): x: 22%, y: 78%
+     - Zone 4 (bottom-right): x: 78%, y: 78%
+   - Tap shows insight popout, NOT inline expansion
+
+3. **Hint Text Added**
+   - Text: "Tap icons to explore insights"
+   - Displayed below image, centered
+
+4. **Insight Popout (Replaces Inline Expansion)**
+   - Centered card on screen (**85% width** - updated from 80%)
+   - White background `#FFFFFF`, 16pt corner radius
+   - Factor name as title header
+   - Close button (✕) on right side
+   - Dimmed background (`#000000` 50% opacity)
+   - Tap dimmed area or ✕ to close
+
+5. **Button Text Change**
+   - Changed "Draw my story" → **"Understand my mood"**
+   - Changed loading text "Understanding your story..." → **"Analyzing your mood..."**
+   - Reflects focus on psychological analysis/insight
+
+**Files Modified:**
+- `docs/003-draw-feelings-frontend/req/02-ui-components.md` - v2.4 with circular tap targets and popout
+- `docs/003-draw-feelings-frontend/req/03-user-flow.md` - v2.4 with "Understand my mood" terminology
+
+---
+
+## [004-mood-visualization-backend] - 2025-12-01
+
+### Version 2.3.0 - IMPLEMENTED
+
+**Changes - Deep Psychological Insights:**
+
+1. **Deep Psychological Analysis** ✅
+   - AI now provides **psychological insights**, not just surface descriptions
+   - Each factor includes:
+     - **Psychological root causes** (e.g., evolutionary need for acceptance)
+     - **Cognitive bias explanations** (explained WITHOUT naming the bias)
+     - **Light sociological context** (e.g., workplace dynamics)
+   - Central stressor now uses **general category** (e.g., "Public Performance Anxiety" not specific event)
+   - Insights are brief and concise (AI decides length)
+
+2. **Text Labels IN Image** ✅
+   - Changed from "no text labels" to **text labels included in image**
+   - Text uses **Title Case** (e.g., "Fear of Judgment")
+   - Text language **matches user's input language**
+   - Factor labels: 2-4 words max
+   - Central stressor label: up to 5 words
+
+3. **Updated Response Structure** ✅
+   - Changed `factors[].description` to `factors[].insight`
+   - Renamed `EmotionalFactor` to `PsychologicalFactor` in Swift models
+   - Added comparison table showing surface vs. deep insight examples
+
+4. **Reserved for Future**
+   - Reframing perspectives saved for future "strategies/suggestions" feature
+
+**Files Modified:**
+- `backend/app/services/story_analyzer.py` - v2.3 with deep psychological insights
+- `backend/app/services/prompt_builder.py` - v2.3 with text labels in image
+- `backend/app/api/v1/visualizations.py` - v2.3 with PsychologicalFactor model
+
+---
+
+## [003-draw-feelings-frontend] - 2025-12-01
+
+### Version 2.3.0 - IMPLEMENTED
+
+**Changes - Insight Display:**
+
+1. **Story Visualization Image Update** ✅
+   - Image now includes text labels (rendered by AI)
+   - Minimalist 2D cartoon with symmetrical composition
+   - Labels in Title Case, matching user's language
+
+2. **Tappable Factor List** ✅
+   - Factors displayed as tappable list items below image
+   - Tap to expand and reveal psychological insight
+   - Smooth expand/collapse animation (0.3s ease)
+   - Chevron icon indicates expand/collapse state
+
+3. **Insight Display Card** ✅
+   - Background: `#F5F9FC` (light blue-gray)
+   - Corner radius: 12pt, Padding: 12pt
+   - Font: 14pt Regular, Color: `#555555`
+   - Shows: root cause, cognitive bias explanation, sociological context
+
+**Files Modified:**
+- `EmotionVisualizer/Services/APIService.swift` - v2.3 with PsychologicalFactor
+- `EmotionVisualizer/Views/DrawMyFeelings/Models/DMFModels.swift` - v2.3 with GeneratedPsychologicalFactor
+- `EmotionVisualizer/Views/DrawMyFeelings/Components/StoryResultView.swift` - v2.3 with tappable factors
+
+---
+
 ## [004-mood-visualization-backend] - 2025-11-30
 
 ### Version 2.2.0

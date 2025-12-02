@@ -79,17 +79,17 @@
 │  Can tap multiple    │    │                                                  │
 │  times!              │    │  [Text area - min 50 chars]                      │
 └──────────────────────┘    │                                                  │
-                            │  [Draw my story - disabled until 50+ chars]      │
+                            │  [Understand my mood - disabled until 50+ chars]      │
                             │                                                  │
                             │                          [Start over]            │
                             └─────────────────────────────────────────────────┘
                                                 │
-                                                │ Enter 50+ chars, tap "Draw my story"
+                                                │ Enter 50+ chars, tap "Understand my mood"
                                                 ▼
                             ┌─────────────────────────────────────────────────┐
                             │              GENERATING STATE                    │
                             │                                                  │
-                            │       "Understanding your story..."              │
+                            │       "Analyzing your mood..."              │
                             │                                                  │
                             │                  [Cancel]                        │
                             └─────────────────────────────────────────────────┘
@@ -97,13 +97,16 @@
                                                 │ Generation complete
                                                 ▼
                             ┌─────────────────────────────────────────────────┐
-                            │          STORY VISUALIZATION RESULT              │
+                            │            MOOD ANALYSIS RESULT                  │
                             │                                                  │
                             │     ┌─────────────────────────┐                  │
+                            │     │  [Factor1]   [Factor2]  │                  │
+                            │     │      \         /        │                  │
+                            │     │     [Central Stressor]  │                  │
+                            │     │      /         \        │                  │
+                            │     │  [Factor3]   [Factor4]  │                  │
                             │     │                         │                  │
-                            │     │    "Draw Story"         │                  │
-                            │     │    Visualization        │                  │
-                            │     │                         │                  │
+                            │     │  (tap icons for insight)│                  │
                             │     └─────────────────────────┘                  │
                             │                                                  │
                             │               [Let it out!]                     │
@@ -193,19 +196,19 @@
 1. Current view (image + buttons) fades out and slides left (0.3s)
 2. Cloud #1 (free text input) slides in from right (0.3s)
 3. Text input area is focused, keyboard appears
-4. "Draw my story" button appears (disabled state)
+4. "Understand my mood" button appears (disabled state)
 5. "Start over" button remains visible
 
 ---
 
-### 2.7 Free Text → Generating (Draw Story)
+### 2.7 Free Text → Generating (Mood Analysis)
 
-**Trigger**: Tap "Draw my story" (requires 50+ characters)
+**Trigger**: Tap "Understand my mood" (requires 50+ characters)
 
 **Animation Sequence** (duration: 0.5s):
 1. Cloud #1 fades out and floats up (0.3s)
 2. Loading view fades in with cloud floating animation
-3. Loading text: "Understanding your story..."
+3. Loading text: "Analyzing your mood..."
 
 ---
 
@@ -316,7 +319,7 @@ struct UserJourneyData {
 
 ### 4.2 Free Text Validation
 
-| Character Count | "Draw my story" Button | Counter Color |
+| Character Count | "Understand my mood" Button | Counter Color |
 |-----------------|------------------------|---------------|
 | 0-49 | Disabled | `#999999` |
 | 50-4500 | Enabled | `#999999` |
@@ -373,7 +376,7 @@ struct UserJourneyData {
 | Tap | "Let it out!" | Trigger firework animation |
 | Tap | "Know more about my feeling" | Go to free text input |
 | Tap | Text area (Cloud #1) | Focus and show keyboard |
-| Tap | "Draw my story" | Generate story visualization |
+| Tap | "Understand my mood" | Generate story visualization |
 | Tap | "Start over" | Reset to Cloud #0 |
 | Tap | Outside keyboard | Dismiss keyboard |
 
@@ -387,5 +390,5 @@ struct UserJourneyData {
 | Questionnaire L1 | 3 options, Back, Start over | Option → L2, Back → Cloud #0 |
 | Questionnaire L2 | Emotion grid, Done, Back, Start over | Done → Generate, Back → L1 |
 | Feeling Result | Summary, Image, Let it out!, Know more, Start over | Let it out!, Know more, Start over |
-| Free Text Input | Cloud #1, Text area, Draw my story, Start over | Draw → Generate, Start over |
+| Free Text Input | Cloud #1, Text area, Understand my mood, Start over | Draw → Generate, Start over |
 | Story Result | Image, Let it out!, Start over | Let it out!, Start over |

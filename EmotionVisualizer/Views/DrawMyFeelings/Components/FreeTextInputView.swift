@@ -90,9 +90,9 @@ struct FreeTextInputView: View {
 
             Spacer()
 
-            // Draw my story button
+            // Understand my mood button (v2.4)
             Button(action: onDrawStory) {
-                Text("Draw my story")
+                Text("Understand my mood")
                     .font(.dmfButton)
                     .foregroundColor(canSubmit ? .white : Color(hex: "999999"))
                     .frame(maxWidth: .infinity)

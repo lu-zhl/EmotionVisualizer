@@ -248,7 +248,7 @@ class APIService {
     }
 }
 
-// MARK: - Visualization Response Models (Version 2.1)
+// MARK: - Visualization Response Models (Version 2.3)
 
 // Shared types
 struct ImageSize: Decodable {
@@ -330,7 +330,7 @@ struct StoryVisualizationResponse: Decodable {
 
 struct StoryAnalysis: Decodable {
     let centralStressor: String
-    let factors: [EmotionalFactor]
+    let factors: [PsychologicalFactor]
     let language: String
 
     enum CodingKeys: String, CodingKey {
@@ -340,9 +340,9 @@ struct StoryAnalysis: Decodable {
     }
 }
 
-struct EmotionalFactor: Decodable {
+struct PsychologicalFactor: Decodable {
     let factor: String
-    let description: String
+    let insight: String
 }
 
 // Legacy alias for backwards compatibility

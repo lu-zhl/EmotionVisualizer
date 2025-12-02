@@ -199,27 +199,35 @@ CloudShape()
 
 ---
 
-### 3.2 Story Visualization Result
+### 3.2 Mood Analysis Result
 
 **Layout**:
 ```
 ┌─────────────────────────────────────────┐
 │                                         │
-│         ┌─────────────────┐             │
-│         │                 │             │
-│         │   Story         │             │
-│         │   Visualization │             │
-│         │   (minimalist   │             │
-│         │   2D cartoon)   │             │
-│         │                 │             │
-│         └─────────────────┘             │
-│                                         │
-│      ┌─────────────────────────┐        │
-│      │  Central Stressor       │        │
-│      │  • Factor 1             │        │
-│      │  • Factor 2             │        │
-│      │  • Factor 3             │        │
-│      └─────────────────────────┘        │
+│    ┌───────────────────────────────┐    │
+│    │                               │    │
+│    │  ┌───────┐       ┌───────┐   │    │
+│    │  │ Icon  │       │ Icon  │   │    │
+│    │  │Factor1│       │Factor2│   │    │
+│    │  └───────┘       └───────┘   │    │
+│    │        \           /         │    │
+│    │         \         /          │    │
+│    │        ┌───────────┐         │    │
+│    │        │  Central  │         │    │
+│    │        │  Stressor │         │    │
+│    │        └───────────┘         │    │
+│    │         /         \          │    │
+│    │        /           \         │    │
+│    │  ┌───────┐       ┌───────┐   │    │
+│    │  │ Icon  │       │ Icon  │   │    │
+│    │  │Factor3│       │Factor4│   │    │
+│    │  └───────┘       └───────┘   │    │
+│    │                               │    │
+│    │   (tap any factor icon for    │    │
+│    │    psychological insight)     │    │
+│    │                               │    │
+│    └───────────────────────────────┘    │
 │                                         │
 │             [Let it out!]               │
 │                                         │
@@ -227,47 +235,150 @@ CloudShape()
 └─────────────────────────────────────────┘
 ```
 
-**Story Analysis Display**:
-- Shows the `story_analysis` data from API response
-- Central stressor as header
-- 3-5 psychological factors as bullet list
-- Displayed below or alongside the visualization image
-- Font: System, 16pt for stressor, 14pt for factors
-- Color: `#333333`
+**Image Specifications**:
+- **Style**: Minimalist 2D infographic with symmetrical 4-corner composition
+- **Content**: Central icon + label for stressor, 4 corner icons + labels for factors
+- **Text in image**: Title Case, matches user's input language
+- Labels are rendered IN the image by AI
+- Size: Screen width - 48pt margins, square aspect ratio
+- Corner radius: 20pt
+- Shadow: Medium drop shadow
 
-**Image Style**:
-- Minimalist 2D cartoon with symmetrical composition
-- Central icon for main stressor, surrounded by factor icons
-- No text labels in the image (labels displayed separately by iOS app)
+**IMPORTANT - No Text List Below Image**:
+- Factor list is NOT displayed as text below the image
+- All factors shown IN the image only
+- Users tap icons in the image to see insights
+- Future: Separate page for text content (for copy/paste)
 
 ---
 
-### 3.3 Future Expansion: "Understand More" Feature
+### 3.3 Tappable Factor Icons
 
-> **Note**: This feature is planned for a future version.
-
-**Purpose**: Allow users to explore their psychological factors in more depth.
-
-**Planned Features**:
-- Tap on a factor to see detailed explanation
-- Show why AI identified this factor from the user's story
-- Pattern recognition across multiple stories ("You often mention Fear of Judgment")
-- Educational content about each psychological factor
-- Root cause exploration prompts
-
-**Placeholder UI** (future):
+**Tap Target Layout** (circular zones at 4 corners):
 ```
 ┌─────────────────────────────────────────┐
-│      [Story Visualization + Factors]    │
 │                                         │
-│  "Would you like to understand more?"   │
+│      ⭕               ⭕                │
+│    (22%,22%)       (78%,22%)            │
+│    Zone 1           Zone 2              │
 │                                         │
-│         [Understand more]               │
 │                                         │
-│             [Let it out!]               │
-│             [Start over]                │
+│                                         │
+│      ⭕               ⭕                │
+│    (22%,78%)       (78%,78%)            │
+│    Zone 3           Zone 4              │
+│                                         │
 └─────────────────────────────────────────┘
+
+⭕ = Circular tap target (18% diameter)
 ```
+
+**Tap Target Specifications**:
+- **Shape**: Circular
+- **Diameter**: 18% of image size
+- **Center positions** (as % of image size):
+  - Zone 1 (top-left): x: 22%, y: 22%
+  - Zone 2 (top-right): x: 78%, y: 22%
+  - Zone 3 (bottom-left): x: 22%, y: 78%
+  - Zone 4 (bottom-right): x: 78%, y: 78%
+
+**Factor-to-Zone Mapping**:
+- `factors[0]` → Zone 1 (top-left)
+- `factors[1]` → Zone 2 (top-right)
+- `factors[2]` → Zone 3 (bottom-left)
+- `factors[3]` → Zone 4 (bottom-right)
+
+**If fewer than 4 factors**:
+- 3 factors: Use zones 1, 2, 3 (zone 4 tap target hidden)
+- 2 factors: Use zones 1, 2 (zones 3, 4 tap targets hidden)
+
+**Hint Text**:
+- Text: "Tap icons to explore insights"
+- Font: System, 14pt Regular
+- Color: `#999999`
+- Position: Below image, centered
+- Padding: 8pt top margin
+
+---
+
+### 3.4 Insight Popout
+
+**Trigger**: Tap a factor icon in the image
+
+**Popout Layout**:
+```
+┌─────────────────────────────────────────┐
+│ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ │
+│ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ │
+│ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ │
+│ ░░░░  ┌────────────────────────┐  ░░░░ │
+│ ░░░░  │ Fear of Judgment     ✕ │  ░░░░ │
+│ ░░░░  ├────────────────────────┤  ░░░░ │
+│ ░░░░  │                        │  ░░░░ │
+│ ░░░░  │  We tend to overesti-  │  ░░░░ │
+│ ░░░░  │  mate how much others  │  ░░░░ │
+│ ░░░░  │  scrutinize us;        │  ░░░░ │
+│ ░░░░  │  colleagues are likely │  ░░░░ │
+│ ░░░░  │  focused on their own  │  ░░░░ │
+│ ░░░░  │  concerns. Workplace   │  ░░░░ │
+│ ░░░░  │  hierarchies can       │  ░░░░ │
+│ ░░░░  │  amplify this feeling. │  ░░░░ │
+│ ░░░░  │                        │  ░░░░ │
+│ ░░░░  └────────────────────────┘  ░░░░ │
+│ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ │
+│ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ │
+└─────────────────────────────────────────┘
+
+░ = Dimmed background (tap to close)
+```
+
+**Popout Specifications**:
+- **Position**: Centered on screen
+- **Size**: 85% screen width, height auto (based on content)
+- **Background**: White `#FFFFFF`
+- **Corner radius**: 16pt
+- **Shadow**: Large drop shadow (`color: #000000, opacity: 0.2, radius: 20, y: 10`)
+
+**Header**:
+- Factor name as title
+- Font: System, 18pt Semibold
+- Color: `#333333`
+- Close button (✕) on right side
+- Close button size: 24pt × 24pt tap target
+- Close button color: `#999999`
+
+**Content**:
+- Psychological insight text
+- Font: System, 16pt Regular
+- Color: `#555555`
+- Line height: 1.5
+- Padding: 20pt
+
+**Dimmed Background**:
+- Color: `#000000` with 50% opacity
+- Tap anywhere on dimmed area to close popout
+
+**Animation**:
+- Open: Fade in dimmed background (0.2s), scale popout from 0.9 to 1.0 with fade in (0.3s ease-out)
+- Close: Reverse animation (0.2s)
+
+**Accessibility**:
+- VoiceOver: Announce "Showing insight for [Factor Name]"
+- Trap focus inside popout when open
+- Escape key / swipe down to dismiss
+
+---
+
+### 3.5 Future Expansion: Advanced Analysis Features
+
+> **Note**: These features are planned for future versions.
+
+**Planned Features**:
+- **Factor-to-factor relationships**: Show how factors influence each other
+- **Pattern recognition**: "You often mention Fear of Judgment"
+- **Separate text page**: Full analysis text for copy/paste
+- **Educational content**: Deep dive into each psychological factor
+- **Root cause exploration**: "What past experience might be connected?"
 
 ---
 
@@ -315,16 +426,16 @@ CloudShape()
 
 ---
 
-### 4.3 "Draw my story" Button
+### 4.3 "Understand my mood" Button
 
-**Purpose**: Submit free text and generate story visualization
+**Purpose**: Submit free text and generate mood analysis visualization
 
 **Visual Specifications**:
 - Size: Screen width - 48pt margins × 56pt height
 - Corner radius: 28pt (pill shape)
 - Background (enabled): Linear gradient `#87CEEB` to `#6BB8D9`
 - Background (disabled): `#D0D0D0`
-- Text: "Draw my story"
+- Text: "Understand my mood"
 - Text color (enabled): White
 - Text color (disabled): `#999999`
 - Font: 18pt, Semibold
@@ -447,14 +558,14 @@ struct FireworkView: View {
 - Animated dots after text
 - Cancel button at bottom
 
-### 6.2 Story Generation Loading
+### 6.2 Mood Analysis Loading
 
-**Display**: After tapping "Draw my story"
+**Display**: After tapping "Understand my mood"
 
 **Visual**:
 - Full screen with background `#F0F8FF`
 - Centered cloud icon with floating animation
-- Text: "Understanding your story..."
+- Text: "Analyzing your mood..."
 - Animated dots after text
 - Cancel button at bottom
 

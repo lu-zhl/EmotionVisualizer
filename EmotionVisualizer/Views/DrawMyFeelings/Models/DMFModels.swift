@@ -206,13 +206,13 @@ struct GeneratedVisualization: Identifiable, Equatable {
     }
 }
 
-// MARK: - Story Analysis Result (Version 2.1)
+// MARK: - Story Analysis Result (Version 2.3)
 struct GeneratedStoryAnalysis: Equatable {
     let centralStressor: String
-    let factors: [GeneratedEmotionalFactor]
+    let factors: [GeneratedPsychologicalFactor]
     let language: String
 
-    init(centralStressor: String, factors: [GeneratedEmotionalFactor], language: String) {
+    init(centralStressor: String, factors: [GeneratedPsychologicalFactor], language: String) {
         self.centralStressor = centralStressor
         self.factors = factors
         self.language = language
@@ -220,23 +220,26 @@ struct GeneratedStoryAnalysis: Equatable {
 
     init(from apiResponse: StoryAnalysis) {
         self.centralStressor = apiResponse.centralStressor
-        self.factors = apiResponse.factors.map { GeneratedEmotionalFactor(from: $0) }
+        self.factors = apiResponse.factors.map { GeneratedPsychologicalFactor(from: $0) }
         self.language = apiResponse.language
     }
 }
 
-struct GeneratedEmotionalFactor: Equatable {
+struct GeneratedPsychologicalFactor: Equatable, Identifiable {
+    let id: UUID
     let factor: String
-    let description: String
+    let insight: String
 
-    init(factor: String, description: String) {
+    init(factor: String, insight: String) {
+        self.id = UUID()
         self.factor = factor
-        self.description = description
+        self.insight = insight
     }
 
-    init(from apiResponse: EmotionalFactor) {
+    init(from apiResponse: PsychologicalFactor) {
+        self.id = UUID()
         self.factor = apiResponse.factor
-        self.description = apiResponse.description
+        self.insight = apiResponse.insight
     }
 }
 

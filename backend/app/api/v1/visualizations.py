@@ -1,9 +1,9 @@
 """
-Visualization API Endpoints (Version 2.1)
+Visualization API Endpoints (Version 2.3)
 
 Handles mood visualization image generation with two specialized endpoints:
 - /feeling - Abstract art from emotions
-- /story - 2D cartoon/infographic from text + emotions (with story analysis)
+- /story - 2D cartoon with TEXT LABELS from text + emotions (with deep psychological analysis)
 """
 
 from fastapi import APIRouter, HTTPException
@@ -94,16 +94,16 @@ class VisualizationData(BaseModel):
     generation_time_ms: int
 
 
-class EmotionalFactor(BaseModel):
-    """An emotional factor identified in the story."""
+class PsychologicalFactor(BaseModel):
+    """A psychological factor identified in the story with deep insight."""
     factor: str
-    description: str
+    insight: str
 
 
 class StoryAnalysis(BaseModel):
-    """AI-generated analysis of the user's story."""
+    """AI-generated deep psychological analysis of the user's story."""
     central_stressor: str
-    factors: List[EmotionalFactor]
+    factors: List[PsychologicalFactor]
     language: str
 
 
@@ -289,10 +289,11 @@ async def generate_story_visualization(request: StoryVisualizationRequest):
     This is the second visualization - AI analyzes text to create a 2D cartoon/infographic
     illustrating the reasons behind the user's feelings.
 
-    Features (v2.1):
-    - Analyzes story text to identify central stressor and emotional factors
-    - Returns story_analysis with labels in the detected language
-    - Generates cartoon/infographic style image (no text labels in image)
+    Features (v2.3):
+    - Deep psychological analysis with insights (root causes, cognitive biases, sociological context)
+    - Central stressor as general category (e.g., "Public Performance Anxiety")
+    - Returns story_analysis with 'insight' field (not 'description')
+    - Generates cartoon with TEXT LABELS in user's language (Title Case)
 
     - **story_text**: Required text (min 50 chars, max 5000 chars)
     - **feeling_category**: Required category: "good", "bad", or "not_sure"
@@ -302,41 +303,44 @@ async def generate_story_visualization(request: StoryVisualizationRequest):
         logger.info(f"Generating story visualization: emotions={request.selected_emotions}, "
                    f"category={request.feeling_category}, text_length={len(request.story_text)}")
 
-        # Step 1: Analyze the story text using Gemini
-        logger.info("Analyzing story text...")
+        # Step 1: Analyze the story text using Gemini for deep psychological insights
+        logger.info("Analyzing story text for deep psychological insights...")
         analysis_result = await story_analyzer.analyze_story(
             story_text=request.story_text,
             selected_emotions=request.selected_emotions
         )
 
-        # Step 2: Build the prompt for story visualization (2D cartoon/infographic)
+        detected_language = analysis_result.get("language", "en")
+
+        # Step 2: Build the prompt for story visualization (2D cartoon with text labels)
         prompt = prompt_builder.build_story_prompt(
             story_text=request.story_text,
             feeling_category=request.feeling_category,
             selected_emotions=request.selected_emotions,
             central_stressor=analysis_result.get("central_stressor"),
-            factors=analysis_result.get("factors", [])
+            factors=analysis_result.get("factors", []),
+            language=detected_language
         )
 
         logger.debug(f"Generated prompt: {prompt[:200]}...")
 
-        # Step 3: Generate image
+        # Step 3: Generate image with text labels
         result = await gemini_client.generate_visualization_image(prompt)
 
         # Extract dominant colors from the emotions for firework animation
         dominant_colors = prompt_builder.get_dominant_colors(request.selected_emotions)
 
-        # Build story analysis response
+        # Build story analysis response with deep psychological insights
         story_analysis = StoryAnalysis(
             central_stressor=analysis_result.get("central_stressor", ""),
             factors=[
-                EmotionalFactor(
+                PsychologicalFactor(
                     factor=f.get("factor", ""),
-                    description=f.get("description", "")
+                    insight=f.get("insight", "")
                 )
                 for f in analysis_result.get("factors", [])
             ],
-            language=analysis_result.get("language", "en")
+            language=detected_language
         )
 
         return StoryVisualizationResponse(
@@ -355,7 +359,7 @@ async def generate_story_visualization(request: StoryVisualizationRequest):
             ),
             meta={
                 "timestamp": datetime.utcnow().isoformat() + "Z",
-                "api_version": "2.1"
+                "api_version": "2.3"
             }
         )
 
